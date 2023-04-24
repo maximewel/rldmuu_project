@@ -41,8 +41,6 @@ def test(
         if render:
             sleep(1)
 
-
-
 if __name__ == '__main__':
     env = "GridWorld"
     n_episodes = 3000
