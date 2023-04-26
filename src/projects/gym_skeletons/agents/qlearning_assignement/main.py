@@ -4,8 +4,7 @@ from algorithms.qlearning_arithmetic_eps import QLearningAritEps
 from algorithms.sarsa import Sarsa
 from algorithms.randAlgo import RandAlgo
 from algorithms.dyna_q import GreedyQIteration
-from algorithms.dnn.test_dqn import DqnAlgorithm
-
+from algorithms.deep_rl.test_dqn import DqnAlgorithm
 import gym_env
 from enums.environments import Environments
 import matplotlib.pyplot as plt
@@ -14,23 +13,23 @@ import os
 
 def test_one():
     #Hyper-parameters
-    training_episodes = 2000
+    training_episodes = 1000
     epsilon = 1.0
     epislon_decay = 0.999
     alpha = 0.6
     gamma = 0.95
-    dynaQ_update_per_iteration = 10
+    dynaQ_update_per_iteration = 64
 
     #Init algos so that we can quickly switch
     qLearning = QLearning(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     qLearningArEps = QLearningAritEps(epsilon=epsilon, alpha=alpha, gamma=gamma, k=10000)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
-    dnn = DqnAlgorithm(k=50000, epsilon=1.0, gamma=0.99, hidden_layer_neurons=64, lr=1e-3, batch_size=256)
+    dqn = DqnAlgorithm(k = 1000, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=32, batch_size=64, tau=0.1)
 
     #Taken for both "learning" phase and "showing off" phase
-    algo = dnn
-    env = Environments.LUNAR_LANDER
+    algo = dqn
+    env = Environments.CARTPOLE
     seed = randint(0, 10000)
 
     #Training
@@ -59,6 +58,7 @@ def test_one():
 
     #SHOW OFF !
     algo.epsilon = 0
+    algo.k = 0
     gym_env.start(algo, env, show=True, max_episodes=50, init=False, seed=seed)
 
 def test_all():

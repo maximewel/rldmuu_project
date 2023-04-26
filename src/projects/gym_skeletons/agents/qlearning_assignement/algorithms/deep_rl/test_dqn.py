@@ -68,7 +68,7 @@ class DqnAlgorithm(Rlalgorithm):
 
     batch_size: int
     hidden_layer_neurons: int
-    TAU = 0.005
+    TAU: float
     lr: float
 
     #DNN
@@ -81,7 +81,7 @@ class DqnAlgorithm(Rlalgorithm):
     #Used for replay
     memory: ReplayMemory
 
-    def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, batch_size: int = 128) -> None:
+    def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, batch_size: int = 128, tau: float = 0.005) -> None:
         super().__init__()
         self.t = 0
         self.k = k
@@ -92,6 +92,7 @@ class DqnAlgorithm(Rlalgorithm):
         self.lr = lr
         self.batch_size = batch_size
         self.hidden_layer_neurons = hidden_layer_neurons
+        self.TAU = tau
     
     def set_env(self, state_space: Box , actions_spaces: Discrete, env_bounds: any):
         if not (isinstance(state_space, Box) and isinstance(actions_spaces, Discrete)):

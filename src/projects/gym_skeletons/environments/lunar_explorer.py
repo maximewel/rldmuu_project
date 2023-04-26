@@ -4,7 +4,7 @@ from numpy import ndarray
 from .base_env import BaseEnv
 
 
-class MyEnv(BaseEnv):
+class LunarExplorer(BaseEnv):
 
     def __init__(self, render):
         super().__init__(render)
@@ -27,6 +27,9 @@ class MyEnv(BaseEnv):
     def step(self, action) -> tuple[ObsType, float, bool]:
         pass
 
+class Tile:
+    def __init__(self) -> None:
+        pass
 
 """
 to reuse our environment in experiments, we convert our environment to a gym adapted environment with:
@@ -41,9 +44,8 @@ register(
     max_episode_steps=300, # Forces the environment episodes to end once the agent played for max_episode_steps steps
 )
 """
-MyEnvGym = MyEnv.to_gym_env
 
-
+GymEnvClassName = LunarExplorer.to_gym_env
 
 
 

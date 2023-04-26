@@ -14,15 +14,9 @@ register(
      max_episode_steps=300,
 )
 
-
 # Yours
-
 register(
-     id="MyEnv",
-     entry_point="environments.my_env:MyEnvGym",
-     max_episode_steps=300,
+     id="Lunar-explorer", 
+     entry_point="environments.lunar_explorer:LunarExplorer",
+     max_episode_steps=300, 
 )
-
-
-
-

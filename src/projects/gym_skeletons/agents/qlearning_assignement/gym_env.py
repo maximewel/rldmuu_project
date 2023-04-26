@@ -38,7 +38,7 @@ def start(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR
             epsilons.append(epsilon)
             rewards.append(reward)
 
-            if terminated or truncated or iteration > 1000: #Avoid getting stuck
+            if terminated or truncated or iteration > 200: #Avoid getting stuck
                 observation, info = env.reset(seed=seed)
                 algorithm.set_state(observation)
 

@@ -4,6 +4,7 @@ import random
 
 from gymnasium.spaces import Discrete
 
+
 class RlModel():
     N_sas: np.ndarray
     N_sa: np.ndarray
