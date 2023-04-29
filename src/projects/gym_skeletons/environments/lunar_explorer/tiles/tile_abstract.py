@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
-
 from typing import Tuple
 
 from .tiletype import TileType
+from actions import Actions
 
 class AbstractTile(ABC):
     tileType: TileType
 
     @abstractmethod
-    def execute(self, action: int) -> Tuple[int, int, bool, float]:
+    def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
         """
         Execute the given action over the tile.
 

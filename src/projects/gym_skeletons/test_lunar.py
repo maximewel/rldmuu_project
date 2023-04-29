@@ -18,6 +18,6 @@ if __name__ == '__main__':
 
     env.reset()
 
-    for i in range(2):
-        env.step(1)
+    for i in range(5):
+        env.step(2)
         time.sleep(1)
