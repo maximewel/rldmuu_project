@@ -7,14 +7,12 @@ from agents import examples
 # Run the environments/__init__.py to let python know about our custom environments
 import environments
 
-
 def test(
         env_id="GridWorldSparce",
         render=True,
         n_episodes=5
-):
-
-    env = gymnasium.make(env_id, render=False, size=10, max_episode_steps=500)
+):  
+    env = gymnasium.make(env_id, render=False, size=10, max_episode_steps=500, seed=42)
     agent = examples.SoftQlearning(env)
 
     n_avg = 100
@@ -44,7 +42,7 @@ def test(
 
 
 if __name__ == '__main__':
-    env = "GridWorld"
+    env = "Lunar-explorer"
     n_episodes = 3000
     render = False
 
