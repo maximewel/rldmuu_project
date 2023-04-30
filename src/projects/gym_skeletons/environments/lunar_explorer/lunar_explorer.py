@@ -27,24 +27,23 @@ class LunarExplorer(BaseEnv):
     player_speed_x: int
     player_speed_y: int
 
-    w: int
-    h: int
+    drill_count: int
 
     SPEED_INC = 1
     MAX_SPEED = 1
 
     MAX_DRILL = 3
 
-    def __init__(self, seed: int, render, size: int, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None):
+    world_generator: AbstractGenerator
+    seed: int
+
+    def __init__(self, render, size: int, seed: int = None, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None):
+        self.seed = seed
         np.random.seed(seed)
 
         super().__init__(render)
 
-        if not world_generator:
-            world_generator = RandomGenerator(size)
-
-        self.grid = world_generator.generate(seed)
-        self.w, self.h = self.grid.shape
+        self.world_generator = world_generator or RandomGenerator(size) 
 
         self.renderer = renderer or LunarTextRenderer()
 
@@ -53,16 +52,30 @@ class LunarExplorer(BaseEnv):
         # We have 4 actions, corresponding to "right", "up", "left", "down"
         self.action_space = spaces.Discrete(len(Actions))
 
+        print(f"Lunar explorer started")
+
+    def init_variables(self) -> None:
+        """Initiate internal variables"""
         self.player_x = 0
         self.player_y = 0
 
         self.player_speed_x = 0
         self.player_speed_y = 0
 
-        print(f"Lunar explorer started")
+        self.drill_count = self.MAX_DRILL
+
+        # Call 
+        self.grid = self.world_generator.generate(self.seed)
 
     def reset(self) -> ndarray:
-        pass
+        #Reset internal variables
+        np.random.seed(self.seed)
+
+        self.init_variables()
+
+        np.random.seed()
+
+        return (self.player_x, self.player_y, self.player_speed_x, self.player_speed_y)
 
     def get_observation(self) -> ndarray:
         pass
@@ -90,7 +103,6 @@ class LunarExplorer(BaseEnv):
         tile: AbstractTile = self.grid[self.player_x, self.player_y]
         print(f"Stepping on tile {tile.tileType.name}")
         offset_x, offset_y, done, reward = tile.execute(action, (self.player_speed_x, self.player_speed_y))
-
         print(f"New player offset: {offset_x, offset_y}")
 
         #Each action is penalized by 1 so that agents find the most optimized routes
@@ -116,11 +128,11 @@ class LunarExplorer(BaseEnv):
                 self.player_y = max(self.player_y + offset_y, 0)
                 self.player_speed_y = max(self.player_speed_y - self.SPEED_INC, -self.MAX_SPEED)
         
-        print(f"New player position: {self.player_x, self.player_y}")
+        print(f"New player position: {self.player_x, self.player_y}, in env reward: {reward}")
         
         observation = (self.player_x, self.player_y, self.player_speed_x, self.player_speed_y)
 
-        return observation, done, reward
+        return observation, reward, done
 
 class Tile:
     def __init__(self) -> None:

@@ -88,7 +88,7 @@ class RandomTile(AbstractTile):
         match action:
             case Actions.LEFT | Actions.RIGHT | Actions.UP | Actions.DOWN:
                 rand_id = np.random.choice(len(self.moves))
-                x, y = self.moves[rand_id]       
+                x, y = self.moves[rand_id]
             case _:
                 x, y = 0, 0
 
@@ -101,6 +101,8 @@ class StandardTile(AbstractTile):
         super().__init__()
 
     def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
+        x,y = 0, 0
+
         match action:
             case Actions.LEFT:
                 x, y = -1, 0
@@ -113,7 +115,7 @@ class StandardTile(AbstractTile):
 
         return x, y, False, 0
     
-class MineralTile(AbstractTile):
+class MineralTile(StandardTile):
     tileType= TileType.MINERAL
 
     value: float
@@ -126,13 +128,12 @@ class MineralTile(AbstractTile):
         self.value = value
 
     def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
-        reward = None
-
+        #If players wants to drill, deplete this mineral's valaue
         if action == Actions.DRILL:
             #Upon drilling, this mineral value is empty
             reward = self.value
             self.value = 0
-        else:
-            reward = 0
+            return 0, 0, False, reward
         
-        return 0, 0, False, reward
+        #Simply act as a standard tile for movement
+        return super().execute(action, speed)

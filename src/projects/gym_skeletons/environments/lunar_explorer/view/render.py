@@ -1,8 +1,8 @@
-import os
 import numpy as np
 from typing import Tuple
 
 from tiles.tile_abstract import AbstractTile
+from tiles.tiletype import TileType
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -17,14 +17,25 @@ class LunarRenderer(ABC):
 
 class LunarTextRenderer(LunarRenderer):
 
+    tile_to_ascii = {
+        TileType.STANDARD.value: "→",
+        TileType.FRAIL.value: "↝",
+        TileType.RANDOM.value: "↬",
+        TileType.FAST.value: "↠",
+
+        TileType.END.value: "⛢",
+
+        TileType.MINERAL.value: "★",
+    }
+
     def render(self, grid: np.ndarray[AbstractTile], player_position: Tuple[int, int]) -> None:
         player_x, player_y = player_position
         w,h = grid.shape
-        for x in range(w):
-            tiles = grid[x, :]
-            line = [f"|{tile.tileType.value}|" for tile in tiles]
-            if x == player_x:
-                line[player_y] = "|X|"
+        for y in range(h):
+            tiles = grid[:, y]
+            line = [f"|{self.tile_to_ascii[tile.tileType.value]}|" for tile in tiles]
+            if y == player_y:
+                line[player_x] = "|X|"
             print(''.join(line))
         print()
 
