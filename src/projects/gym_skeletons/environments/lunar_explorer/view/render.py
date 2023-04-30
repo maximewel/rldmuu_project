@@ -7,6 +7,12 @@ from tiles.tiletype import TileType
 import tkinter as tk
 from PIL import Image, ImageTk
 
+import glob
+
+from enum import Enum
+
+import os
+
 from abc import ABC, abstractmethod
 
 class LunarRenderer(ABC):
@@ -39,13 +45,62 @@ class LunarTextRenderer(LunarRenderer):
             print(''.join(line))
         print()
 
+
+class ImageNames(Enum):
+    ROVER = "./sprites/rover.png"
+    END = "./sprites/end.png"
+
+    STANDARD = "./sprites/terrain/standard.png"
+    FAST = "./sprites/terrain/fast.png"
+    RANDOM = "./sprites/terrain/crater.png"
+    FRAIL = "./sprites/terrain/frail.png"
+
+    MINERAL_FOLDER = "./sprites/minerals/PNG"
+
 class Lunar2DRenderer(LunarRenderer):
     frame: tk.Frame
     labels: np.ndarray[tk.Label] = None
     window: tk.Tk
 
+    LABEL_SIZE = (64, 64)
+
+    rover_image: Image
+    images = {}
+
+    def get_abs_path(self, rel_path: str) -> str:
+        return os.path.join(os.path.dirname(__file__), rel_path)
+
+    def load_image(self, image_path: str):
+        image_abs_path = self.get_abs_path(image_path)
+
+        img= Image.open(image_abs_path)
+
+        resized_image= img.resize(self.LABEL_SIZE)
+
+        return resized_image
+
+    def load_images(self):
+        print(f"Rendered loading all images...")
+        #Single player sprite
+        self.rover_image = self.load_image(ImageNames.ROVER.value)
+
+        #All single terrain sprites
+        for (tiletype, image_name) in [(TileType.END, ImageNames.END.value), (TileType.STANDARD, ImageNames.STANDARD.value), 
+                                       (TileType.FAST, ImageNames.FAST.value), (TileType.FRAIL, ImageNames.FRAIL.value), (TileType.RANDOM, ImageNames.RANDOM.value)]:
+            self.images[tiletype] = self.load_image(image_name)
+
+        #Mineral sprites, taken at random later
+        self.images[TileType.MINERAL] = []
+        for filename in os.scandir(self.get_abs_path(ImageNames.MINERAL_FOLDER.value)):
+            self.images[TileType.MINERAL].append(self.load_image(filename))
+
+        print(f"Loading finished")
+
     def __init__(self) -> None:
         super().__init__()
+
+        self.load_images()
+
         self.init_frame()
         
     def init_frame(self):
@@ -55,17 +110,44 @@ class Lunar2DRenderer(LunarRenderer):
         self.frame = tk.Frame(self.window)
         self.frame.pack(expand=True)
     
-    def create_label(self, grid: np.ndarray) -> None:
+    def get_image(self, tile: TileType, has_player: bool = False) -> Image:
+        if has_player:
+            return self.rover_image
+        
+        if tile == TileType.MINERAL:
+            mineral_len = len(self.images[TileType.MINERAL])
+            return self.images[TileType.MINERAL][tile.value % mineral_len]
+
+        return self.images[tile]
+    
+    def update_labels(self, grid: np.ndarray[TileType], player_position: Tuple[int, int]) -> None:
+        w, h = grid.shape
+
+
+        for x in range(w):
+            for y in range(h):
+                tile: AbstractTile = grid[x, y]
+                is_player_pos = ((x,y) == player_position)
+                image = ImageTk.PhotoImage(self.get_image(tile.tileType, is_player_pos))
+
+                label: tk.Label = self.labels[x, y]
+                label.configure(image=image)
+                label.image = image
+
+    def create_labels(self, grid: np.ndarray[TileType]) -> None:
         self.labels = np.zeros_like(grid)
         w, h = grid.shape
 
         for x in range(w):
             for y in range(h):
-                self.labels[x,y] = tk.Label(self.frame, text=f"{x, y}")
-                self.labels[x,y].grid(row=x, column=y)
+                label = tk.Label(self.frame)
+                label.grid(row=y, column=x)
+                self.labels[x, y] = label
 
     def render(self, grid: np.ndarray[AbstractTile], player_position: Tuple[int, int]) -> None:
         if self.labels is None:
-            self.labels = self.create_label(grid)
+            self.create_labels(grid)
+        
+        self.update_labels(grid, player_position)
         
         self.window.update()

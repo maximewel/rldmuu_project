@@ -21,7 +21,7 @@ class RandomGenerator(AbstractGenerator):
         #END tile is not part of the random generation
         grid = np.random.choice(a=[t for t in TileType if t is not TileType.END], size=(self.world_size, self.world_size))
 
-        end_x, end_y = np.random.choice(range(1, grid.shape[0]+1)), np.random.choice(range(1, grid.shape[1]+1))
+        end_x, end_y = np.random.choice(range(1, grid.shape[0])), np.random.choice(range(1, grid.shape[1]))
 
         print(f"End coordinates at {(end_x, end_y)}")
         grid[end_x, end_y] = TileType.END

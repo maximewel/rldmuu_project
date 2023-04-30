@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "./environments/lunar_explorer/"))
 
 from environments.lunar_explorer.world_generator.array_generator import ArrayGenerator
+from environments.lunar_explorer.view.render import Lunar2DRenderer
 from environments.lunar_explorer.tiles.tiletype import TileType
 from environments.lunar_explorer.actions import Actions
 
@@ -122,6 +123,15 @@ def test_fast():
     env.step(Actions.DOWN.value)
     env.step(Actions.DOWN.value)
 
+def test_2d():
+    env = gymnasium.make("Lunar-explorer", render=True, size=10, max_episode_steps=500, renderer=Lunar2DRenderer())
+    env.reset()
+
+    import time
+    for i in range(25):
+        env.step(np.random.choice(Actions).value)
+        time.sleep(1)
+
 if __name__ == '__main__':
     # test_render()
 
@@ -131,4 +141,6 @@ if __name__ == '__main__':
 
     # test_mineral()
 
-    test_fast()
+    #test_fast()
+
+    test_2d()
