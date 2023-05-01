@@ -21,6 +21,7 @@ class FrailTile(AbstractTile):
     tileType= TileType.FRAIL
 
     FALL_CHANCE = 0.20
+    FALL_REWARD = -100
 
     def __init__(self) -> None:
         super().__init__()
@@ -28,6 +29,7 @@ class FrailTile(AbstractTile):
     def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
         x, y, done = None, None, None
         has_moved: bool = True
+        reward = 0
 
         match action:
             case Actions.NOTHING | Actions.DRILL:
@@ -44,9 +46,9 @@ class FrailTile(AbstractTile):
 
         #If player is speeding, there is a chance to die on the frail tail
         if has_moved and np.abs(sum(speed)) > 0 and np.random.rand() < self.FALL_CHANCE:
-            x, y, done = 0, 0, True
+            x, y, done, reward = 0, 0, True, self.FALL_REWARD
 
-        return x, y, done, 0
+        return x, y, done, reward
 
 class FastTile(AbstractTile):
     tileType= TileType.FAST

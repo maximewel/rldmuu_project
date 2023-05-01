@@ -10,23 +10,29 @@ import environments
 def test(
         env_id="GridWorldSparce",
         render=True,
-        n_episodes=5
+        n_episodes=5,
+        seed=42
 ):  
-    env = gymnasium.make(env_id, render=False, size=10, max_episode_steps=500, seed=42)
+    env = gymnasium.make(env_id, render=False, size=10, max_episode_steps=500, seed=seed)
     agent = examples.SoftQlearning(env)
 
     n_avg = 100
     avg_score = np.full(n_avg, fill_value=np.nan, dtype=np.float32)
 
+    show_off = False
+
     for i in range(n_episodes):
         if i == n_episodes - 5:
             env.close()
-            env = gymnasium.make(env_id, render=True, size=10, max_episode_steps=500)
+            env = gymnasium.make(env_id, render=True, size=10, max_episode_steps=500, seed=seed)
+            show_off = True
         done = False
         episode_reward = 0
         observation, _ = env.reset()
         while not done:
-            action = agent.make_decision(observation)
+            action = agent.make_decision(observation, explore=not show_off)
+            if show_off:
+                sleep(0.2)
 
             next_observation, reward, done, timeout, _ = env.step(action)
             done = done or timeout
@@ -40,10 +46,10 @@ def test(
             sleep(1)
 
 
-
 if __name__ == '__main__':
     env = "Lunar-explorer"
-    n_episodes = 3000
+    n_episodes = 500
     render = False
+    seed = 43
 
-    test(env, render, n_episodes)
+    test(env, render, n_episodes, seed)

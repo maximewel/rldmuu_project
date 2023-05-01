@@ -139,13 +139,20 @@ class SoftQlearning(Qlearning):
                 0. if (hashable_state, a) not in self.Q else self.Q[(hashable_state, a)] / self.eta
                 for a in range(self.env.action_space.n)
             ]
-            exp_q = np.exp(q_values)
 
+            #TODO HERE AVOID OVERFLOW
+            q_values = [q/100 for q in q_values]
+
+
+            exp_q = np.exp(q_values)
             p = exp_q / np.sum(exp_q)
 
             # sample over softmax distribution
-
-            return np.random.choice(self.env.action_space.n, p=p)
+            try:
+                return np.random.choice(self.env.action_space.n, p=p)
+            except Exception as e:
+                print(f"Q values: {q_values}\nExp: {exp_q}\np: {p}\nspace: {self.env.action_space.n}")
+                raise e
 
         else:
             return super().make_decision(observation, explore)

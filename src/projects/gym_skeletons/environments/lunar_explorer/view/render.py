@@ -77,7 +77,7 @@ class Lunar2DRenderer(LunarRenderer):
 
         resized_image= img.resize(self.LABEL_SIZE)
 
-        return resized_image
+        return ImageTk.PhotoImage(resized_image, master=self.window)
 
     def load_images(self):
         print(f"Rendered loading all images...")
@@ -99,9 +99,10 @@ class Lunar2DRenderer(LunarRenderer):
     def __init__(self) -> None:
         super().__init__()
 
+        self.init_frame()
+
         self.load_images()
 
-        self.init_frame()
         
     def init_frame(self):
         self.window = tk.Tk()
@@ -110,29 +111,28 @@ class Lunar2DRenderer(LunarRenderer):
         self.frame = tk.Frame(self.window)
         self.frame.pack(expand=True)
     
-    def get_image(self, tile: TileType, has_player: bool = False) -> Image:
+    def get_image(self, tile: AbstractTile, has_player: bool = False) -> Image:
         if has_player:
             return self.rover_image
         
-        if tile == TileType.MINERAL:
+        if tile.tileType == TileType.MINERAL:
             mineral_len = len(self.images[TileType.MINERAL])
             return self.images[TileType.MINERAL][tile.value % mineral_len]
 
-        return self.images[tile]
+        return self.images[tile.tileType]
     
     def update_labels(self, grid: np.ndarray[TileType], player_position: Tuple[int, int]) -> None:
         w, h = grid.shape
-
 
         for x in range(w):
             for y in range(h):
                 tile: AbstractTile = grid[x, y]
                 is_player_pos = ((x,y) == player_position)
-                image = ImageTk.PhotoImage(self.get_image(tile.tileType, is_player_pos))
+                image = self.get_image(tile, is_player_pos)
 
                 label: tk.Label = self.labels[x, y]
-                label.configure(image=image)
                 label.image = image
+                label.configure(image=image)
 
     def create_labels(self, grid: np.ndarray[TileType]) -> None:
         self.labels = np.zeros_like(grid)
@@ -143,6 +143,8 @@ class Lunar2DRenderer(LunarRenderer):
                 label = tk.Label(self.frame)
                 label.grid(row=y, column=x)
                 self.labels[x, y] = label
+        
+        self.window.lift()
 
     def render(self, grid: np.ndarray[AbstractTile], player_position: Tuple[int, int]) -> None:
         if self.labels is None:

@@ -124,13 +124,16 @@ def test_fast():
     env.step(Actions.DOWN.value)
 
 def test_2d():
-    env = gymnasium.make("Lunar-explorer", render=True, size=10, max_episode_steps=500, renderer=Lunar2DRenderer())
+    env = gymnasium.make("Lunar-explorer", render=True, size=9, max_episode_steps=500, renderer=Lunar2DRenderer(), seed=42)
     env.reset()
 
     import time
-    for i in range(25):
-        env.step(np.random.choice(Actions).value)
-        time.sleep(1)
+    for i in range(100):
+        obs, reward, terminated, truncated, info = env.step(np.random.choice(Actions).value)
+        print(reward)
+        if terminated:
+            env.reset()
+        time.sleep(0.5)
 
 if __name__ == '__main__':
     # test_render()

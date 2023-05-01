@@ -21,9 +21,8 @@ class RandomGenerator(AbstractGenerator):
 
         #Compute probabilities from ratio
         p = [tile_ratio / sum(tiletypes_ratios) for tile_ratio in tiletypes_ratios]
-        print(f"Probas: {p}")
 
-        grid = np.random.choice(a=tiletypes, p=[tile_ratio / sum(tiletypes_ratios) for tile_ratio in tiletypes_ratios], size=(self.world_size, self.world_size))
+        grid = np.random.choice(a=tiletypes, p=p, size=(self.world_size, self.world_size))
 
         end_x, end_y = np.random.choice(range(1, grid.shape[0])), np.random.choice(range(1, grid.shape[1]))
 

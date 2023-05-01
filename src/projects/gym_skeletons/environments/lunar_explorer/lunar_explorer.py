@@ -37,7 +37,10 @@ class LunarExplorer(BaseEnv):
     world_generator: AbstractGenerator
     seed: int
 
-    def __init__(self, render, size: int, seed: int = None, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None):
+    verboe: bool
+
+    def __init__(self, render, size: int, seed: int = None, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None, verbose: bool = False):
+        self.verbose = verbose
         self.seed = seed
         np.random.seed(seed)
 
@@ -45,11 +48,11 @@ class LunarExplorer(BaseEnv):
 
         self.world_generator = world_generator or RandomGenerator(size) 
 
-        self.renderer = renderer or LunarTextRenderer()
+        self.renderer = renderer or Lunar2DRenderer()
 
         # The observation contains (x, y, Vx, Vy)
-        self.observation_space = spaces.Discrete(size * size * 6)
-        # We have 4 actions, corresponding to "right", "up", "left", "down"
+        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1]), high=np.array([size-1, size-1, 1, 1]), shape=(4,), dtype=np.int32)
+        # We have multiple actions, corresponding to the ones found in the enum
         self.action_space = spaces.Discrete(len(Actions))
 
         print(f"Lunar explorer started")
@@ -64,7 +67,6 @@ class LunarExplorer(BaseEnv):
 
         self.drill_count = self.MAX_DRILL
 
-        # Call 
         self.grid = self.world_generator.generate(self.seed)
 
     def reset(self) -> ndarray:
@@ -75,10 +77,10 @@ class LunarExplorer(BaseEnv):
 
         np.random.seed()
 
-        return (self.player_x, self.player_y, self.player_speed_x, self.player_speed_y)
+        return self.get_observation()
 
     def get_observation(self) -> ndarray:
-        pass
+        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y], dtype=np.int32)
 
     def compute_reward(self, action) -> float:
         pass
@@ -97,13 +99,15 @@ class LunarExplorer(BaseEnv):
         * Compute speed. Render final player position
         """
         action = Actions(action)
-        print(f"Using step {action}")
+        if self.verbose:
+            print(f"Using step {action}")
 
         #Compute tile exec
         tile: AbstractTile = self.grid[self.player_x, self.player_y]
-        print(f"Stepping on tile {tile.tileType.name}")
         offset_x, offset_y, done, reward = tile.execute(action, (self.player_speed_x, self.player_speed_y))
-        print(f"New player offset: {offset_x, offset_y}")
+        if self.verbose:
+            print(f"Stepping on tile {tile.tileType.name}")
+            print(f"New player offset: {offset_x, offset_y}")
 
         #Each action is penalized by 1 so that agents find the most optimized routes
         if not done:
@@ -113,7 +117,7 @@ class LunarExplorer(BaseEnv):
         if offset_x != 0:
             self.player_speed_y = 0
             if offset_x > 0:
-                self.player_x = min(self.player_x + offset_x, self.grid.shape[0])
+                self.player_x = min(self.player_x + offset_x, self.grid.shape[0]-1)
                 self.player_speed_x = min(self.player_speed_x + self.SPEED_INC, self.MAX_SPEED)
             else :
                 self.player_x = max(self.player_x + offset_x, 0)
@@ -122,21 +126,18 @@ class LunarExplorer(BaseEnv):
         if offset_y != 0:
             self.player_speed_x = 0
             if offset_y > 0:
-                self.player_y = min(self.player_y + offset_y, self.grid.shape[1])
+                self.player_y = min(self.player_y + offset_y, self.grid.shape[1]-1)
                 self.player_speed_y = min(self.player_speed_y + self.SPEED_INC, self.MAX_SPEED)
             else :
                 self.player_y = max(self.player_y + offset_y, 0)
                 self.player_speed_y = max(self.player_speed_y - self.SPEED_INC, -self.MAX_SPEED)
         
-        print(f"New player position: {self.player_x, self.player_y}, in env reward: {reward}")
+        if self.verbose:
+            print(f"New player position: {self.player_x, self.player_y}, in env reward: {reward}")
         
-        observation = (self.player_x, self.player_y, self.player_speed_x, self.player_speed_y)
+        observation = self.get_observation()
 
         return observation, reward, done
-
-class Tile:
-    def __init__(self) -> None:
-        pass
 
 """
 to reuse our environment in experiments, we convert our environment to a gym adapted environment with:
@@ -153,8 +154,3 @@ register(
 """
 
 LunarExplorerEnvGym = LunarExplorer.to_gym_env
-
-
-
-
-
