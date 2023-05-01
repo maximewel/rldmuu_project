@@ -17,7 +17,7 @@ def test_one():
     epsilon = 1.0
     epislon_decay = 0.999
     alpha = 0.6
-    gamma = 0.95
+    gamma = 0.99
     dynaQ_update_per_iteration = 64
 
     #Init algos so that we can quickly switch
@@ -25,11 +25,11 @@ def test_one():
     qLearningArEps = QLearningAritEps(epsilon=epsilon, alpha=alpha, gamma=gamma, k=10000)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
-    dqn = DqnAlgorithm(k = 1000, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=32, batch_size=64, tau=0.1)
+    dqn = DqnAlgorithm(k = 1000, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=64, batch_size=128, tau=0.1)
 
     #Taken for both "learning" phase and "showing off" phase
     algo = dqn
-    env = Environments.CARTPOLE
+    env = Environments.LUNAR_LANDER
     seed = randint(0, 10000)
 
     #Training

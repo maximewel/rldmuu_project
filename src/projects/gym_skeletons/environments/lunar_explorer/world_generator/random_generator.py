@@ -16,10 +16,14 @@ class RandomGenerator(AbstractGenerator):
     def generate(self, seed: int):
         """Random a uniformely distributed choice of the possible tiles"""
         #TODO: Change probability distribution at will. Sparse world ? Rich world ? Lot of terrains ? Etc...
-        # p = ...
+        tiletypes_ratios = [10, 2, 2, 1, 1]
+        tiletypes = [TileType.STANDARD, TileType.FAST, TileType.FRAIL, TileType.RANDOM, TileType.MINERAL]
 
-        #END tile is not part of the random generation
-        grid = np.random.choice(a=[t for t in TileType if t is not TileType.END], size=(self.world_size, self.world_size))
+        #Compute probabilities from ratio
+        p = [tile_ratio / sum(tiletypes_ratios) for tile_ratio in tiletypes_ratios]
+        print(f"Probas: {p}")
+
+        grid = np.random.choice(a=tiletypes, p=[tile_ratio / sum(tiletypes_ratios) for tile_ratio in tiletypes_ratios], size=(self.world_size, self.world_size))
 
         end_x, end_y = np.random.choice(range(1, grid.shape[0])), np.random.choice(range(1, grid.shape[1]))
 
