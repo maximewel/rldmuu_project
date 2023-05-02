@@ -26,7 +26,6 @@ class RandomGenerator(AbstractGenerator):
 
         end_x, end_y = np.random.choice(range(1, grid.shape[0])), np.random.choice(range(1, grid.shape[1]))
 
-        print(f"End coordinates at {(end_x, end_y)}")
         grid[end_x, end_y] = TileType.END
 
         #Force player position at 0,0 to be standard tile

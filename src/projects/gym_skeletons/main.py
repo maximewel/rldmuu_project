@@ -1,43 +1,46 @@
-import gym_env
-from algorithms.qlearning import QLearning
-from algorithms.qlearning_arithmetic_eps import QLearningAritEps
-from algorithms.sarsa import Sarsa
-from algorithms.randAlgo import RandAlgo
-from algorithms.dyna_q import GreedyQIteration
-from algorithms.deep_rl.test_dqn import DqnAlgorithm
-import gym_env
-from enums.environments import Environments
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "./qlearning_assignement"))
+
+from qlearning_assignement import gym_env
+
+from qlearning_assignement.algorithms.qlearning import QLearning
+from qlearning_assignement.algorithms.qlearning_arithmetic_eps import QLearningAritEps
+from qlearning_assignement.algorithms.sarsa import Sarsa
+from qlearning_assignement.algorithms.randAlgo import RandAlgo
+from qlearning_assignement.algorithms.dyna_q import GreedyQIteration
+from qlearning_assignement.algorithms.deep_rl.test_dqn import DqnAlgorithm
+
+from qlearning_assignement.enums.environments import Environments
 import matplotlib.pyplot as plt
 from random import randint
-import os
+
+# Run the environments/__init__.py to let python know about our custom environments
+import environments
 
 def test_one():
     #Hyper-parameters
-    training_episodes = 1000
+    training_episodes = 2000
     epsilon = 1.0
-    epislon_decay = 0.999
+    epislon_decay = 0.9999
     alpha = 0.6
-    gamma = 0.99
+    gamma = 0.9999
     dynaQ_update_per_iteration = 64
 
     #Init algos so that we can quickly switch
     qLearning = QLearning(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
-    qLearningArEps = QLearningAritEps(epsilon=epsilon, alpha=alpha, gamma=gamma, k=10000)
+    qLearningArEps = QLearningAritEps(epsilon=epsilon, alpha=alpha, gamma=gamma, k=5000)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
-    dqn = DqnAlgorithm(k = 1000, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=64, batch_size=128, tau=0.1)
+    dqn = DqnAlgorithm(k = 10000, epsilon=epsilon, gamma=gamma, lr=1e-3, hidden_layer_neurons=32, batch_size=128, tau=0.10)
 
     #Taken for both "learning" phase and "showing off" phase
-    algo = dqn
-    env = Environments.LUNAR_LANDER
+    algo = qLearningArEps
+    env = Environments.LUNAR_EXPLORER
     seed = randint(0, 10000)
 
     #Training
-    metrics, epsilons = gym_env.start(algo, env, show=False, show_episode=True, max_episodes=training_episodes, seed=seed)
-
-    #Plot training results
-    iterations = [iterations for iterations, reward in metrics]
-    rewards = [reward for iterations, reward in metrics]
+    iterations, rewards, epsilons = gym_env.start(algo, env, render=False, show_episode=True, max_episodes=training_episodes, seed=seed)
 
     fig, axes = plt.subplots(3)
 
@@ -59,7 +62,7 @@ def test_one():
     #SHOW OFF !
     algo.epsilon = 0
     algo.k = 0
-    gym_env.start(algo, env, show=True, max_episodes=50, init=False, seed=seed)
+    gym_env.start(algo, env, render=True, max_episodes=50, init=False, seed=seed)
 
 def test_all():
     #Hyper-parameters

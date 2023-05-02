@@ -8,7 +8,7 @@ from actions import Actions
 class EndTile(AbstractTile):
     tileType= TileType.END
 
-    END_VALUE = 200
+    END_VALUE = 100
 
     def __init__(self) -> None:
         super().__init__()
@@ -20,7 +20,7 @@ class EndTile(AbstractTile):
 class FrailTile(AbstractTile):
     tileType= TileType.FRAIL
 
-    FALL_CHANCE = 0.20
+    FALL_CHANCE = 0.50
     FALL_REWARD = -100
 
     def __init__(self) -> None:
@@ -122,8 +122,8 @@ class MineralTile(StandardTile):
 
     value: float
 
-    MIN_VALUE = 10
-    MAX_VALUE = 25
+    MIN_VALUE = 20
+    MAX_VALUE = 50
 
     def __init__(self, value: float) -> None:
         super().__init__()
@@ -139,3 +139,6 @@ class MineralTile(StandardTile):
         
         #Simply act as a standard tile for movement
         return super().execute(action, speed)
+
+    def has_mineral(self) -> bool:
+        return not self.value == 0

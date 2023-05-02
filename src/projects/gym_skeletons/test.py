@@ -4,6 +4,8 @@ from time import sleep
 
 from agents import examples
 
+from environments.lunar_explorer.actions import Actions
+
 # Run the environments/__init__.py to let python know about our custom environments
 import environments
 
@@ -32,9 +34,12 @@ def test(
         while not done:
             action = agent.make_decision(observation, explore=not show_off)
             if show_off:
+                print(f"Taking action {Actions(action)}")
                 sleep(0.2)
 
             next_observation, reward, done, timeout, _ = env.step(action)
+            if show_off:
+                print(reward)
             done = done or timeout
             episode_reward += reward
             agent.learn(observation, action, reward, next_observation)
@@ -50,6 +55,6 @@ if __name__ == '__main__':
     env = "Lunar-explorer"
     n_episodes = 500
     render = False
-    seed = 43
-
+    seed = 44
+    
     test(env, render, n_episodes, seed)

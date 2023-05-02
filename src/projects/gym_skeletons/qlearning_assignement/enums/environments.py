@@ -10,8 +10,11 @@ class Environments(Enum):
     LUNAR_LANDER = "LunarLander-v2"
     CARTPOLE = "CartPole-v1"
 
+    LUNAR_EXPLORER = "Lunar-explorer"
+
 
 class Bounds(Enum):
+
     #Express bounds in term of (min, max, quantization)
     LUNAR_LANDER = [
         #positions
@@ -38,4 +41,12 @@ class Bounds(Enum):
         (-0.21, 0.21, 42),
         #Pole velocity
         (-5, 5, 50)
+    ]
+
+    LUNAR_EXPLORER = [
+        (0, 10, 10),
+        (0, 10, 10),
+        (-1, 1, 3),
+        (-1, 1, 3),
+        (0, 1, 1)
     ]

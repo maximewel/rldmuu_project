@@ -51,7 +51,7 @@ class LunarExplorer(BaseEnv):
         self.renderer = renderer or Lunar2DRenderer()
 
         # The observation contains (x, y, Vx, Vy)
-        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1]), high=np.array([size-1, size-1, 1, 1]), shape=(4,), dtype=np.int32)
+        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0]), high=np.array([size-1, size-1, 1, 1, 1]), shape=(5,), dtype=np.int32)
         # We have multiple actions, corresponding to the ones found in the enum
         self.action_space = spaces.Discrete(len(Actions))
 
@@ -80,7 +80,9 @@ class LunarExplorer(BaseEnv):
         return self.get_observation()
 
     def get_observation(self) -> ndarray:
-        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y], dtype=np.int32)
+        tile: AbstractTile = self.grid[self.player_x, self.player_y]
+        mineral_observation = 1 if tile.has_mineral() else 0
+        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation], dtype=np.int32)
 
     def compute_reward(self, action) -> float:
         pass
@@ -114,6 +116,8 @@ class LunarExplorer(BaseEnv):
             reward -= 1
 
         #Compute new position
+        if offset_x == 0 and offset_y == 0:
+            self.player_speed_x, self.player_speed_y = 0, 0
         if offset_x != 0:
             self.player_speed_y = 0
             if offset_x > 0:
