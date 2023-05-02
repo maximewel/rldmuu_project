@@ -50,7 +50,7 @@ class LunarExplorer(BaseEnv):
 
         self.renderer = renderer or Lunar2DRenderer()
 
-        # The observation contains (x, y, Vx, Vy)
+        # The observation contains (x, y, Vx, Vy, has_mineral)
         self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0]), high=np.array([size-1, size-1, 1, 1, 1]), shape=(5,), dtype=np.int32)
         # We have multiple actions, corresponding to the ones found in the enum
         self.action_space = spaces.Discrete(len(Actions))
