@@ -8,6 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from base_env import BaseEnv
 from tiles.tile_abstract import AbstractTile
+from tiles.tiletype import TileType
 from world_generator.abstract_generator import AbstractGenerator
 from world_generator.random_generator import RandomGenerator
 from view.render import LunarTextRenderer, Lunar2DRenderer, LunarRenderer
@@ -50,8 +51,8 @@ class LunarExplorer(BaseEnv):
 
         self.renderer = renderer or Lunar2DRenderer()
 
-        # The observation contains (x, y, Vx, Vy, has_mineral)
-        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0]), high=np.array([size-1, size-1, 1, 1, 1]), shape=(5,), dtype=np.int32)
+        # The observation contains (x, y, Vx, Vy, has_mineral, has_drill)
+        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0, 0]), high=np.array([size-1, size-1, 1, 1, 1, 1]), shape=(6,), dtype=np.int32)
         # We have multiple actions, corresponding to the ones found in the enum
         self.action_space = spaces.Discrete(len(Actions))
 
@@ -82,7 +83,8 @@ class LunarExplorer(BaseEnv):
     def get_observation(self) -> ndarray:
         tile: AbstractTile = self.grid[self.player_x, self.player_y]
         mineral_observation = 1 if tile.has_mineral() else 0
-        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation], dtype=np.int32)
+        drill_observation = 1 if self.drill_count > 0 else 0
+        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation, drill_observation], dtype=np.int32)
 
     def compute_reward(self, action) -> float:
         pass
@@ -114,6 +116,14 @@ class LunarExplorer(BaseEnv):
         #Each action is penalized by 1 so that agents find the most optimized routes
         if not done:
             reward -= 1
+
+        # if action == Actions.DRILL and \
+        #     tile.tileType == TileType.MINERAL: # alternative if discount only where minerals
+        # if action == Actions.DRILL and \
+        #     tile.tileType == TileType.MINERAL and \
+        #         tile.has_mineral(): # alternative if discount only where minerals still available
+        if action == Actions.DRILL:
+            self.drill_count -= 1
 
         #Compute new position
         if offset_x == 0 and offset_y == 0:

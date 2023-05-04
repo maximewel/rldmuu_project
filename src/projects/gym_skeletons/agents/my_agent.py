@@ -15,8 +15,6 @@ class QLearningEliTra(BaseAgent):
                  eps_final=1e-2):
         super().__init__(env)
         self.env = env
-        print(self.env.observation_space.shape)
-        print(self.env.action_space.shape)
         self.n_actions = env.action_space.shape
         self.n_states = 2
         self.Q = []

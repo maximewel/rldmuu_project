@@ -26,7 +26,7 @@ def test_one():
     seed = randint(0, 10000)
 
     #Hyper-parameters
-    training_episodes = 2000
+    training_episodes = 5000
     epsilon = 1.0
     epislon_decay = 0.9999
     alpha = 0.6
@@ -36,13 +36,13 @@ def test_one():
     #Init algos so that we can quickly switch
     qLearning = QLearning(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     qLearningArEps = QLearningAritEps(epsilon=epsilon, alpha=alpha, gamma=gamma, k=5000)
-    qLearningEliTra = QLearningEliTra(env=env, discount=alpha, learning_rate=gamma, eps=1., eps_decay=0.999)
+    #qLearningEliTra = QLearningEliTra(env=env, discount=alpha, learning_rate=gamma, eps=1., eps_decay=0.999)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
     dqn = DqnAlgorithm(k = 10000, epsilon=epsilon, gamma=gamma, lr=1e-3, hidden_layer_neurons=32, batch_size=128, tau=0.10)
 
     # selected algo
-    algo = qLearningEliTra
+    algo = qLearningArEps
 
     #Training
     iterations, rewards, epsilons = gym_env.start(algo, env, render=False, show_episode=True, max_episodes=training_episodes, seed=seed)

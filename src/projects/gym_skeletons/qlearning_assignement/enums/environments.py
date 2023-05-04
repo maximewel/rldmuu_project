@@ -44,9 +44,14 @@ class Bounds(Enum):
     ]
 
     LUNAR_EXPLORER = [
+        # positions
         (0, 10, 10),
         (0, 10, 10),
+        # velocity
         (-1, 1, 3),
         (-1, 1, 3),
+        # mineral status
+        (0, 1, 1),
+        # drill staus
         (0, 1, 1)
     ]
