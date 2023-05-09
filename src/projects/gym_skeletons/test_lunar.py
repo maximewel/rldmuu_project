@@ -124,6 +124,7 @@ def test_fast():
     env.step(Actions.DOWN.value)
 
 def test_2d():
+
     env = gymnasium.make("Lunar-explorer", render=True, size=9, max_episode_steps=500, renderer=Lunar2DRenderer(), seed=42)
     env.reset()
 
@@ -135,6 +136,26 @@ def test_2d():
             env.reset()
         time.sleep(0.5)
 
+def test_square():
+    world_generator = ArrayGenerator([
+        [TileType.STANDARD, TileType.STANDARD, TileType.STANDARD],
+        [TileType.STANDARD, TileType.STANDARD, TileType.STANDARD],
+        [TileType.STANDARD, TileType.STANDARD, TileType.STANDARD]
+    ])
+
+    env = gymnasium.make("Lunar-explorer", render=True, size=3, max_episode_steps=500, renderer=Lunar2DRenderer(), 
+                        seed=42, world_generator=world_generator)
+    env.reset()
+
+    import time
+    for action in [Actions.RIGHT, Actions.DOWN, Actions.UP, Actions.LEFT]:
+        for i in range(5):
+            obs, reward, terminated, truncated, info = env.step(action.value)
+            x, y, speed_x, speed_y, has_min, drill_status = obs
+            print(f"[{x}, {y}] Sp [{speed_x}, {speed_y}] Drill[{drill_status}] Mineral[{has_min}]")
+            time.sleep(1)
+        time.sleep(5)
+
 if __name__ == '__main__':
     # test_render()
 
@@ -144,6 +165,8 @@ if __name__ == '__main__':
 
     # test_mineral()
 
-    #test_fast()
+    # test_fast()
 
-    test_2d()
+    # test_2d()
+
+    test_square()

@@ -11,6 +11,7 @@ class Environments(Enum):
     CARTPOLE = "CartPole-v1"
 
     LUNAR_EXPLORER = "Lunar-explorer"
+    LUNAR_EXPLORER_CONTINUOUS = "Lunar-explorer-continuous"
 
 
 class Bounds(Enum):
@@ -52,6 +53,16 @@ class Bounds(Enum):
         (-1, 1, 3),
         # mineral status
         (0, 1, 1),
-        # drill staus
+        # drill status
         (0, 1, 1)
+    ]
+
+    LUNAR_EXPLORER_CONTINUOUS = [
+        # positions
+        
+        # velocity
+
+        # mineral status
+
+        # drill status
     ]

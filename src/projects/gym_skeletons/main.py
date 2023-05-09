@@ -2,18 +2,18 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "./qlearning_assignement"))
 
-from qlearning_assignement import gym_env
+from agents import gym_env
 
-from qlearning_assignement.algorithms.qlearning import QLearning
-from qlearning_assignement.algorithms.qlearning_arithmetic_eps import QLearningAritEps
-from qlearning_assignement.algorithms.sarsa import Sarsa
-from qlearning_assignement.algorithms.randAlgo import RandAlgo
-from qlearning_assignement.algorithms.dyna_q import GreedyQIteration
-from qlearning_assignement.algorithms.deep_rl.test_dqn import DqnAlgorithm
+from agents.algorithms.qlearning import QLearning
+from agents.algorithms.qlearning_arithmetic_eps import QLearningAritEps
+from agents.algorithms.sarsa import Sarsa
+from agents.algorithms.randAlgo import RandAlgo
+from agents.algorithms.dyna_q import GreedyQIteration
+from agents.algorithms.deep_rl.test_dqn import DqnAlgorithm
 
-from agents.my_agent import QLearningEliTra
+#from agents.algorithms.elitra import QLearningEliTra
 
-from qlearning_assignement.enums.environments import Environments
+from agents.enums.environments import Environments
 import matplotlib.pyplot as plt
 from random import randint
 
@@ -26,7 +26,7 @@ def test_one():
     seed = randint(0, 10000)
 
     #Hyper-parameters
-    training_episodes = 5000
+    training_episodes = 1500
     epsilon = 1.0
     epislon_decay = 0.9999
     alpha = 0.6
@@ -39,10 +39,10 @@ def test_one():
     #qLearningEliTra = QLearningEliTra(env=env, discount=alpha, learning_rate=gamma, eps=1., eps_decay=0.999)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
-    dqn = DqnAlgorithm(k = 10000, epsilon=epsilon, gamma=gamma, lr=1e-3, hidden_layer_neurons=32, batch_size=128, tau=0.10)
+    dqn = DqnAlgorithm(k = 1500, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=64, batch_size=128, tau=0.05)
 
     # selected algo
-    algo = qLearningArEps
+    algo = dqn
 
     #Training
     iterations, rewards, epsilons = gym_env.start(algo, env, render=False, show_episode=True, max_episodes=training_episodes, seed=seed)
