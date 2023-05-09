@@ -94,6 +94,9 @@ class LunarExplorer(BaseEnv):
         
     def render(self) -> None:
         self.renderer.render(self.grid, (self.player_x, self.player_y))
+    
+    def in_bound(self, low, high, value) -> bool:
+        return value >= low and value <= high
 
     def step(self, action) -> tuple[ObsType, float, bool]:
         """
@@ -128,23 +131,34 @@ class LunarExplorer(BaseEnv):
         #Compute new position
         if offset_x == 0 and offset_y == 0:
             self.player_speed_x, self.player_speed_y = 0, 0
+        
         if offset_x != 0:
             self.player_speed_y = 0
-            if offset_x > 0:
-                self.player_x = min(self.player_x + offset_x, self.grid.shape[0]-1)
-                self.player_speed_x = min(self.player_speed_x + self.SPEED_INC, self.MAX_SPEED)
-            else :
-                self.player_x = max(self.player_x + offset_x, 0)
-                self.player_speed_x = max(self.player_speed_x - self.SPEED_INC, -self.MAX_SPEED)
+            new_x = self.player_x + offset_x
+            
+            #If going out of bound: Cancel move := don't update position + cancel speed
+            if not self.in_bound(0, self.grid.shape[0]-1, new_x):
+                self.player_speed_x = 0
+            else:
+                self.player_x = new_x
+                if offset_x > 0:
+                    self.player_speed_x = min(self.player_speed_x + self.SPEED_INC, self.MAX_SPEED)
+                else :
+                    self.player_speed_x = max(self.player_speed_x - self.SPEED_INC, -self.MAX_SPEED)
         
         if offset_y != 0:
             self.player_speed_x = 0
-            if offset_y > 0:
-                self.player_y = min(self.player_y + offset_y, self.grid.shape[1]-1)
-                self.player_speed_y = min(self.player_speed_y + self.SPEED_INC, self.MAX_SPEED)
-            else :
-                self.player_y = max(self.player_y + offset_y, 0)
-                self.player_speed_y = max(self.player_speed_y - self.SPEED_INC, -self.MAX_SPEED)
+
+            new_y = self.player_y + offset_y
+
+            if not self.in_bound(0, self.grid.shape[1]-1, new_y):
+                self.player_speed_y = 0
+            else:
+                self.player_y = new_y
+                if offset_y > 0:
+                    self.player_speed_y = min(self.player_speed_y + self.SPEED_INC, self.MAX_SPEED)
+                else :
+                    self.player_speed_y = max(self.player_speed_y - self.SPEED_INC, -self.MAX_SPEED)
         
         if self.verbose:
             print(f"New player position: {self.player_x, self.player_y}, in env reward: {reward}")
