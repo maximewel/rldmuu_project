@@ -7,13 +7,15 @@ from tiles.tiletype import TileType
 import tkinter as tk
 from PIL import Image, ImageTk
 
-import glob
-
 from enum import Enum
+
+import numpy as np
 
 import os
 
 from abc import ABC, abstractmethod
+
+from tkinter import NW
 
 class LunarRenderer(ABC):
     
@@ -58,13 +60,17 @@ class ImageNames(Enum):
     MINERAL_FOLDER = "./sprites/minerals/PNG"
 
 class Lunar2DRenderer(LunarRenderer):
-    frame: tk.Frame
-    labels: np.ndarray[tk.Label] = None
     window: tk.Tk
+    canvas: tk.Canvas
+    frame: tk.Frame
+
+    labels: np.ndarray[tk.Label] = None
 
     LABEL_SIZE = (64, 64)
 
     rover_image: Image
+    rover_canevas_image: any
+
     images = {}
 
     def get_abs_path(self, rel_path: str) -> str:
@@ -100,16 +106,15 @@ class Lunar2DRenderer(LunarRenderer):
         super().__init__()
 
         self.init_frame()
-
         self.load_images()
-
         
     def init_frame(self):
         self.window = tk.Tk()
         self.window.title("Lunar explorer")
+        self.window.withdraw()
 
-        self.frame = tk.Frame(self.window)
-        self.frame.pack(expand=True)
+        self.canvas = tk.Canvas(self.window)
+        self.canvas.pack()
     
     def get_image(self, tile: AbstractTile, has_player: bool = False) -> Image:
         if has_player:
@@ -124,29 +129,36 @@ class Lunar2DRenderer(LunarRenderer):
     def update_labels(self, grid: np.ndarray[TileType], player_position: Tuple[int, int]) -> None:
         w, h = grid.shape
 
+        self.canvas.delete("all")
+
         for x in range(w):
             for y in range(h):
+                pix_x, pix_y = self.pos_to_pix((x, y))
                 tile: AbstractTile = grid[x, y]
-                is_player_pos = ((x,y) == player_position)
-                image = self.get_image(tile, is_player_pos)
+                tile_image = self.get_image(tile, has_player=False)
+                self.canvas.create_image(pix_x, pix_y, image=tile_image, anchor=NW)
 
-                label: tk.Label = self.labels[x, y]
-                label.image = image
-                label.configure(image=image)
+        pix_x, pix_y = self.pos_to_pix(player_position)
+        self.canvas.create_image(pix_x, pix_y, image=self.rover_image,anchor=NW)
 
     def create_labels(self, grid: np.ndarray[TileType]) -> None:
         self.labels = np.zeros_like(grid)
         w, h = grid.shape
+        cell_w, cell_h = self.LABEL_SIZE
 
-        for x in range(w):
-            for y in range(h):
-                label = tk.Label(self.frame)
-                label.grid(row=y, column=x)
-                self.labels[x, y] = label
-        
+        self.canvas.config(width=w*cell_w, height=h*cell_h)
+                
+        self.window.deiconify()
         self.window.lift()
+    
+    def pos_to_pix(self, position: Tuple[float, float]) -> Tuple[int, int]:
+        """Compute the player's pixel position from its x,y position, unit being a single cell."""
+        x,y = position
+        w_cell, h_cell = self.LABEL_SIZE
 
-    def render(self, grid: np.ndarray[AbstractTile], player_position: Tuple[int, int]) -> None:
+        return int(np.round(x*w_cell)), int(np.round(y*h_cell))
+
+    def render(self, grid: np.ndarray[AbstractTile], player_position: Tuple[float, float]) -> None:
         if self.labels is None:
             self.create_labels(grid)
         

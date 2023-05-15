@@ -80,7 +80,7 @@ class Lunar2DRenderer(LunarRenderer):
         return ImageTk.PhotoImage(resized_image, master=self.window)
 
     def load_images(self):
-        print(f"Rendered loading all images...")
+        print("Rendered loading all images...")
         #Single player sprite
         self.rover_image = self.load_image(ImageNames.ROVER.value)
 
@@ -94,7 +94,7 @@ class Lunar2DRenderer(LunarRenderer):
         for filename in os.scandir(self.get_abs_path(ImageNames.MINERAL_FOLDER.value)):
             self.images[TileType.MINERAL].append(self.load_image(filename))
 
-        print(f"Loading finished")
+        print("Loading finished")
 
     def __init__(self) -> None:
         super().__init__()
@@ -102,11 +102,11 @@ class Lunar2DRenderer(LunarRenderer):
         self.init_frame()
 
         self.load_images()
-
         
     def init_frame(self):
         self.window = tk.Tk()
         self.window.title("Lunar explorer")
+        self.window.withdraw()
 
         self.frame = tk.Frame(self.window)
         self.frame.pack(expand=True)
@@ -145,6 +145,8 @@ class Lunar2DRenderer(LunarRenderer):
                 self.labels[x, y] = label
         
         self.window.lift()
+        self.window.deiconify()
+
 
     def render(self, grid: np.ndarray[AbstractTile], player_position: Tuple[int, int]) -> None:
         if self.labels is None:

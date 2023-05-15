@@ -18,5 +18,11 @@ register(
 register(
      id="Lunar-explorer", 
      entry_point="environments.lunar_explorer.lunar_explorer:LunarExplorerEnvGym",
-     max_episode_steps=300, 
+     max_episode_steps=1000, 
+)
+
+register(
+     id="Lunar-explorer-continuous", 
+     entry_point="environments.lunar_explorer_continuous.lunar_explorer:LunarExplorerEnvGym",
+     max_episode_steps=1000, 
 )

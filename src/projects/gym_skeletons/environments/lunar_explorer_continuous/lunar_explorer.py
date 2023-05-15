@@ -22,15 +22,15 @@ class LunarExplorer(BaseEnv):
 
     renderer: LunarRenderer
 
-    player_x: int
-    player_y: int
+    player_x: float
+    player_y: float
 
-    player_speed_x: int
-    player_speed_y: int
+    player_speed_x: float
+    player_speed_y: float
 
     drill_count: int
 
-    SPEED_INC = 1
+    SPEED_INC = 0.20
     MAX_SPEED = 1
 
     MAX_DRILL = 3
@@ -52,16 +52,16 @@ class LunarExplorer(BaseEnv):
         self.renderer = renderer or Lunar2DRenderer()
 
         # The observation contains (x, y, Vx, Vy, has_mineral, has_drill)
-        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0, 0]), high=np.array([size-1, size-1, 1, 1, 1, 1]), shape=(6,), dtype=np.int32)
+        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0, 0]), high=np.array([size-1, size-1, 1, 1, 1, 1]), shape=(6,), dtype=np.float32)
         # We have multiple actions, corresponding to the ones found in the enum
         self.action_space = spaces.Discrete(len(Actions))
 
-        print(f"Lunar explorer started")
+        print("Lunar explorer started")
 
     def init_variables(self) -> None:
         """Initiate internal variables"""
-        self.player_x = 0
-        self.player_y = 0
+        self.player_x = 0.5
+        self.player_y = 0.5
 
         self.player_speed_x = 0
         self.player_speed_y = 0
@@ -80,11 +80,12 @@ class LunarExplorer(BaseEnv):
 
         return self.get_observation()
 
+
     def get_observation(self) -> ndarray:
-        tile: AbstractTile = self.grid[self.player_x, self.player_y]
+        tile: AbstractTile = self.get_player_tile()
         mineral_observation = 1 if tile.has_mineral() else 0
         drill_observation = 1 if self.drill_count > 0 else 0
-        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation, drill_observation], dtype=np.int32)
+        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation, drill_observation], dtype=np.float32)
 
     def compute_reward(self, action) -> float:
         pass
@@ -94,6 +95,11 @@ class LunarExplorer(BaseEnv):
         
     def render(self) -> None:
         self.renderer.render(self.grid, (self.player_x, self.player_y))
+    
+    def get_player_tile(self) -> AbstractTile:
+        """Get the current player tile according to its position"""
+        x, y = int(np.floor(self.player_x)), int(np.floor(self.player_y))
+        return self.grid[x, y]
 
     def step(self, action) -> tuple[ObsType, float, bool]:
         """
@@ -107,7 +113,7 @@ class LunarExplorer(BaseEnv):
             print(f"Using step {action}")
 
         #Compute tile exec
-        tile: AbstractTile = self.grid[self.player_x, self.player_y]
+        tile: AbstractTile = self.get_player_tile()
         offset_x, offset_y, done, reward = tile.execute(action, (self.player_speed_x, self.player_speed_y))
         if self.verbose:
             print(f"Stepping on tile {tile.tileType.name}")

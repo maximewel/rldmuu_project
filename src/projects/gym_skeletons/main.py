@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "."))
-sys.path.append(os.path.join(os.path.dirname(__file__), "./qlearning_assignement"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "./agents"))
 
 from agents import gym_env
 
@@ -22,11 +22,11 @@ import environments
 
 def test_one():
     #Taken for both "learning" phase and "showing off" phase
-    env = Environments.LUNAR_EXPLORER
+    env = Environments.LUNAR_EXPLORER_CONTINUOUS
     seed = randint(0, 10000)
 
     #Hyper-parameters
-    training_episodes = 1500
+    training_episodes = 1000
     epsilon = 1.0
     epislon_decay = 0.9999
     alpha = 0.6
@@ -39,13 +39,13 @@ def test_one():
     #qLearningEliTra = QLearningEliTra(env=env, discount=alpha, learning_rate=gamma, eps=1., eps_decay=0.999)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
-    dqn = DqnAlgorithm(k = 1500, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=64, batch_size=128, tau=0.05)
+    dqn = DqnAlgorithm(k = 12500, epsilon=epsilon, gamma=gamma, lr=1e-2, hidden_layer_neurons=48, batch_size=128, tau=0.05)
 
     # selected algo
-    algo = dqn
+    algo = qLearning
 
     #Training
-    iterations, rewards, epsilons = gym_env.start(algo, env, render=False, show_episode=True, max_episodes=training_episodes, seed=seed)
+    iterations, rewards, epsilons = gym_env.start(algo, env, render=False, max_episodes=training_episodes, seed=seed)
 
     fig, axes = plt.subplots(3)
 
