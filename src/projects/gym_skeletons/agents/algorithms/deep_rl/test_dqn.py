@@ -15,6 +15,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+import numpy as np
+
 class DqnNetwork(nn.Module):
 
     def __init__(self, n_observations: int, n_actions: int, hidden_layer_neurons: int):
@@ -70,6 +72,7 @@ class DqnAlgorithm(Rlalgorithm):
     hidden_layer_neurons: int
     TAU: float
     lr: float
+    target_update_episodes: int #Updates after which the target's weight are copied into the online
 
     #DNN
     policy_net: nn.Module
@@ -81,7 +84,10 @@ class DqnAlgorithm(Rlalgorithm):
     #Used for replay
     memory: ReplayMemory
 
-    def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, batch_size: int = 128, tau: float = 0.005) -> None:
+    terrain_size: int
+
+    def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, batch_size: int = 128, 
+                 tau: float = 0.005, target_update_episodes: int = 20, terrain_size: int = 15) -> None:
         super().__init__()
         self.t = 0
         self.k = k
@@ -93,6 +99,9 @@ class DqnAlgorithm(Rlalgorithm):
         self.batch_size = batch_size
         self.hidden_layer_neurons = hidden_layer_neurons
         self.TAU = tau
+        self.target_update_episodes = target_update_episodes
+
+        self.terrain_size = terrain_size
     
     def set_env(self, state_space: Box , actions_spaces: Discrete, env_bounds: any):
         if not (isinstance(state_space, Box) and isinstance(actions_spaces, Discrete)):
@@ -115,6 +124,19 @@ class DqnAlgorithm(Rlalgorithm):
         self.loss_fn = nn.SmoothL1Loss()
 
         self.memory = ReplayMemory(10000)
+    
+    def normalize_observation(self, observation: np.ndarray):
+        x,y = observation[0], observation[1]
+
+        x /= self.terrain_size
+        y /= self.terrain_size
+
+        normalized_obs = observation.astype(np.float32)
+
+        normalized_obs[0] = x
+        normalized_obs[1] = y
+
+        return normalized_obs
 
     def next_action(self):
         """Apply policy to determine next action using current self policy model's estimations, on the same basis as Q-learning"""
@@ -127,6 +149,7 @@ class DqnAlgorithm(Rlalgorithm):
 
     def update(self, action, observation, reward):
         """Update the state of the RL algo with the observed parameters"""
+        observation = self.normalize_observation(observation)
 
         next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
         reward_as_tensor = torch.tensor([reward])
@@ -145,14 +168,19 @@ class DqnAlgorithm(Rlalgorithm):
     
     def update_models(self):
         """Update the secondary model according to the policy model"""
+
         target_net_state_dict = self.target_net.state_dict()
         policy_net_state_dict = self.policy_net.state_dict()
         
-        #Do a very simple tradeoff on each parameter of the target network: target <- (tau*target) + ((1-tau) * policy)
-        for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key]*self.TAU + target_net_state_dict[key]*(1-self.TAU)
-        
-        self.target_net.load_state_dict(target_net_state_dict)
+        if self.t % self.target_update_episodes == 0:
+            #When we are at a full update episode, load the online state dict into the target
+            self.target_net.load_state_dict(policy_net_state_dict)
+        else:
+            #Do a very simple tradeoff on each parameter of the target network: target <- (tau*target) + ((1-tau) * policy)
+            for key in policy_net_state_dict:
+                target_net_state_dict[key] = policy_net_state_dict[key]*self.TAU + target_net_state_dict[key]*(1-self.TAU)
+            
+            self.target_net.load_state_dict(target_net_state_dict)
     
     def optimize_model(self):
         """Train the main model with internal memory sampling (replay)"""
@@ -202,6 +230,8 @@ class DqnAlgorithm(Rlalgorithm):
         self.optimizer.step()
     
     def set_state(self, observation: any):
+        observation = self.normalize_observation(observation)
+
         #Invalidate prev step
         if (last_item := self.memory.last_value()):
             last_item: Transition

@@ -132,7 +132,11 @@ class Lunar2DRenderer(LunarRenderer):
 
                 label: tk.Label = self.labels[x, y]
                 label.image = image
-                label.configure(image=image)
+
+                if tile.tileType == TileType.MINERAL:
+                    label.configure(text=str(tile.value), image=image)
+                else:
+                    label.configure(image=image)
 
     def create_labels(self, grid: np.ndarray[TileType]) -> None:
         self.labels = np.zeros_like(grid)
@@ -140,7 +144,7 @@ class Lunar2DRenderer(LunarRenderer):
 
         for x in range(w):
             for y in range(h):
-                label = tk.Label(self.frame)
+                label = tk.Label(self.frame, compound=tk.BOTTOM)
                 label.grid(row=y, column=x)
                 self.labels[x, y] = label
         

@@ -80,7 +80,6 @@ class LunarExplorer(BaseEnv):
 
         return self.get_observation()
 
-
     def get_observation(self) -> ndarray:
         tile: AbstractTile = self.get_player_tile()
         mineral_observation = 1 if tile.has_mineral() else 0
@@ -104,9 +103,8 @@ class LunarExplorer(BaseEnv):
     def step(self, action) -> tuple[ObsType, float, bool]:
         """
         Act in the environment. Done in 3 steps:
-        * Execute tile's behavior wrt the action
-        * Compute new player position
-        * Compute speed. Render final player position
+        * Compute player speed with new action / acceleration
+        * Execute tile's behavior
         """
         action = Actions(action)
         if self.verbose:
@@ -114,6 +112,7 @@ class LunarExplorer(BaseEnv):
 
         #Compute tile exec
         tile: AbstractTile = self.get_player_tile()
+
         offset_x, offset_y, done, reward = tile.execute(action, (self.player_speed_x, self.player_speed_y))
         if self.verbose:
             print(f"Stepping on tile {tile.tileType.name}")
