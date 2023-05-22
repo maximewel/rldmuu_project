@@ -30,21 +30,20 @@ class QLearningEliTra(Rlalgorithm):
         self.eps_final = eps_final
 
 
-    def set_env(self, state_space: Box | Discrete, actions_spaces: Discrete, env_bounds: Bounds):
-        super().set_env(state_space, actions_spaces, env_bounds)
+    # def set_env(self, state_space: Box | Discrete, actions_spaces: Discrete, env_bounds: Bounds):
+    #     super().set_env(state_space, actions_spaces, env_bounds)
+    #     # print("SET_ENV")
+    #     # print(np.argmax(self.eligibility))
+
+    def set_state(self, observation: any):
+        super().set_state(observation)
         self.eligibility = np.zeros_like(self.Q)
-        self.prev_state = self.discrete_observation(state_space.sample())
-        #self.prev_action = actions_spaces.sample()
-        # print(self.eligibility.shape)
-        # print(self.Q.shape)
-        # print("Q", self.Q[:])
-        # self.n_states = self.state_space.n
-        # self.n_actions = self.actions_spaces.n
+        self.prev_state = self.discrete_observation(observation)
 
     def next_action(self):
         """Apply policy to determine next action from Q-table"""
         #Epsilon: 'epsilon' chance that action is random. Otherwise, take best possible (eps-greedy)
-        if (random.uniform(0, 1) < self.eps  or np.argmax(self.Q[self.state]) == 0):
+        if (random.uniform(0, 1) < self.eps):
             return self.actions_spaces.sample()
         return np.argmax(self.Q[self.state])
 
@@ -52,40 +51,39 @@ class QLearningEliTra(Rlalgorithm):
         """Update the state of the RL algo with the observed parameters"""
         #Get index out of obs
         next_state = self.discrete_observation(observation)
+        currentQ = self.Q[self.state][action]
+        next_best_Q = np.max(self.Q[next_state])
+        # print("next_state", next_state)
+        # print("self.Q.shape", self.Q.shape)
+        # print("reward", reward)
+        # print("self.discount", self.discount)
+        # print("self.Q[next_state]", self.Q[next_state])
+        # print("np.max(self.Q[next_state])", np.max(self.Q[next_state]))
+        # print("self.Q[self.state][action]", self.Q[self.state][action])
+        td_error = reward + self.discount * next_best_Q - currentQ
+        # print("self.eligibility[self.state][action]", self.eligibility[self.state][action])
 
-        td_error = reward + self.discount * np.max(self.Q[next_state]) - self.Q[self.state][action]
-        # print("prevstate", self.prev_state.shape)
-        # print("self.Q[self.prev_state, action]", self.Q[self.prev_state, action])
-        self.eligibility[self.state][action] += 1
-        # print(self.eligibility[self.state][action])
-        # print("eligibility", self.eligibility.shape)
-        # print("Q", self.Q.shape)
-        # for s in range(self.n_states):
-        #     for a in range(self.n_actions):
-        #         self.Q[s, a] += self.learning_rate * self.eligibility[s, a] * td_error
+        self.eligibility[self.state][action] += 1 # accumulating traces
+        # self.eligibility[self.state][action] = (1 - self.learning_rate) * self.eligibility[self.state][action] + 1  # dutch traces
+        # self.eligibility[self.state][action] = 1 # replacing traces
 
-        #     # You could do this with:
-        self.Q[:] += self.learning_rate * self.eligibility * td_error
+        # print("self.learning_rate", self.learning_rate)
+        # #print("self.eligibility", self.eligibility)
+        # print("np.max(self.eligibility)", np.max(self.eligibility))
+        # print("np.min(self.eligibility)", np.min(self.eligibility))
+        # print("self.eligibility.shape", self.eligibility.shape)
+        # print("td_error", td_error)
+        # print("before self.Q.shape", self.Q.shape)
+        # print("(self.learning_rate * td_error * self.eligibility).shape", (self.learning_rate * td_error * self.eligibility).shape)
+        # print("np.max((self.learning_rate * td_error * self.eligibility))", np.max((self.learning_rate * td_error * self.eligibility)))
+        self.Q = self.Q + self.learning_rate * td_error * self.eligibility
+        # print("after self.Q.shape", self.Q.shape)
+        # print("self.lam", self.lam)
+        # print("self.discount", self.discount)
+        self.eligibility = self.discount * self.lam * self.eligibility # You forgot this
 
-        self.eligibility *= self.lam * self.discount # You forgot this
-        print(np.max(self.Q))
-        #print(self.eligibility)
-        # self.prev_state = self.state
-        #self.prev_action = action
-        #self.prev_reward = reward
         self.state = next_state
 
         self.eps *= self.eps_decay
-
-        #Update Qtable based on observed value
-        # currentQ = self.Q[self.state][action]
-
-        # next_best_Q = np.max(self.Q[next_state])
-
-        # self.Q[self.state][action] = currentQ + self.alpha * (reward + self.gamma * next_best_Q - currentQ)
-        
-        # self.state = next_state
-
-        # self.epsilon = self.epsilon * self.epsilon_decay
 
         return (self.eps, reward)
