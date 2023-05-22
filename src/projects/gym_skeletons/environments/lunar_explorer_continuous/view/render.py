@@ -100,7 +100,7 @@ class Lunar2DRenderer(LunarRenderer):
         for filename in os.scandir(self.get_abs_path(ImageNames.MINERAL_FOLDER.value)):
             self.images[TileType.MINERAL].append(self.load_image(filename))
 
-        print(f"Loading finished")
+        print("Loading finished")
 
     def __init__(self) -> None:
         super().__init__()
@@ -139,7 +139,7 @@ class Lunar2DRenderer(LunarRenderer):
                 self.canvas.create_image(pix_x, pix_y, image=tile_image, anchor=NW)
 
         pix_x, pix_y = self.pos_to_pix(player_position)
-        self.canvas.create_image(pix_x, pix_y, image=self.rover_image,anchor=NW)
+        self.canvas.create_image(pix_x, pix_y, image=self.rover_image, anchor=tk.CENTER)
 
     def create_labels(self, grid: np.ndarray[TileType]) -> None:
         self.labels = np.zeros_like(grid)

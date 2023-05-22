@@ -30,7 +30,7 @@ class LunarExplorer(BaseEnv):
 
     drill_count: int
 
-    SPEED_INC = 0.20
+    SPEED_INC = 0.1
     MAX_SPEED = 1
 
     MAX_DRILL = 3
@@ -89,6 +89,9 @@ class LunarExplorer(BaseEnv):
     def compute_reward(self, action) -> float:
         pass
 
+    def in_bound(self, low, high, value) -> bool:
+        return value >= low and value <= high
+
     def update(self, action) -> bool:
         super().update()
         
@@ -103,53 +106,77 @@ class LunarExplorer(BaseEnv):
     def step(self, action) -> tuple[ObsType, float, bool]:
         """
         Act in the environment. Done in 3 steps:
-        * Compute player speed with new action / acceleration
+        * Compute player position
+        * Add speed to current speed
         * Execute tile's behavior
         """
         action = Actions(action)
         if self.verbose:
             print(f"Using step {action}")
 
+        if self.verbose:
+            print(f"Speed = ({self.player_speed_x},{self.player_speed_y}), going {action}")
+
+        #Add acceleration to player speed
+        match action:
+            case Actions.LEFT:
+                if self.player_speed_y != 0:
+                    self.player_speed_x, self.player_speed_y = self.player_speed_y, 0
+                self.player_speed_x = max(self.player_speed_x - self.SPEED_INC, -self.MAX_SPEED)
+            case Actions.RIGHT:
+                if self.player_speed_y != 0:
+                    self.player_speed_x, self.player_speed_y = self.player_speed_y, 0
+                self.player_speed_x = min(self.player_speed_x + self.SPEED_INC, self.MAX_SPEED)
+            case Actions.UP:
+                if self.player_speed_x != 0:
+                    self.player_speed_y, self.player_speed_x = self.player_speed_x, 0
+                self.player_speed_y = max(self.player_speed_y - self.SPEED_INC, -self.MAX_SPEED)
+            case Actions.DOWN:
+                if self.player_speed_x != 0:
+                    self.player_speed_y, self.player_speed_x = self.player_speed_x, 0
+                self.player_speed_y = min(self.player_speed_y + self.SPEED_INC, self.MAX_SPEED)
+            case Actions.DRILL:
+                if self.drill_count > 0:
+                    self.drill_count -= 1
+                    #Stop moving when drilling
+                    self.player_speed_x = 0
+                    self.player_speed_y = 0
+
+        if self.verbose:
+            print(f"Speed: ({self.player_speed_x},{self.player_speed_y})\n")
+
         #Compute tile exec
         tile: AbstractTile = self.get_player_tile()
-
+        
         offset_x, offset_y, done, reward = tile.execute(action, (self.player_speed_x, self.player_speed_y))
+
         if self.verbose:
             print(f"Stepping on tile {tile.tileType.name}")
             print(f"New player offset: {offset_x, offset_y}")
+        
+        #Compute new position, verify that the rover is not going out of bound with its position.
+        if offset_x != 0:
+            new_x = self.player_x + offset_x
+            
+            #If going out of bound: Cancel move := don't update position + cancel speed
+            if not self.in_bound(0, self.grid.shape[0]-1, new_x):
+                self.player_speed_x = 0
+                self.player_x = 0 if new_x < 0 else self.grid.shape[0]-1
+            else:
+                self.player_x = new_x
+        
+        if offset_y != 0:
+            new_y = self.player_y + offset_y
+
+            if not self.in_bound(0, self.grid.shape[1]-1, new_y):
+                self.player_speed_y = 0
+                self.player_y = 0 if new_y < 0 else self.grid.shape[1]-1
+            else:
+                self.player_y = new_y
 
         #Each action is penalized by 1 so that agents find the most optimized routes
         if not done:
-            reward -= 1
-
-        # if action == Actions.DRILL and \
-        #     tile.tileType == TileType.MINERAL: # alternative if discount only where minerals
-        # if action == Actions.DRILL and \
-        #     tile.tileType == TileType.MINERAL and \
-        #         tile.has_mineral(): # alternative if discount only where minerals still available
-        if action == Actions.DRILL:
-            self.drill_count -= 1
-
-        #Compute new position
-        if offset_x == 0 and offset_y == 0:
-            self.player_speed_x, self.player_speed_y = 0, 0
-        if offset_x != 0:
-            self.player_speed_y = 0
-            if offset_x > 0:
-                self.player_x = min(self.player_x + offset_x, self.grid.shape[0]-1)
-                self.player_speed_x = min(self.player_speed_x + self.SPEED_INC, self.MAX_SPEED)
-            else :
-                self.player_x = max(self.player_x + offset_x, 0)
-                self.player_speed_x = max(self.player_speed_x - self.SPEED_INC, -self.MAX_SPEED)
-        
-        if offset_y != 0:
-            self.player_speed_x = 0
-            if offset_y > 0:
-                self.player_y = min(self.player_y + offset_y, self.grid.shape[1]-1)
-                self.player_speed_y = min(self.player_speed_y + self.SPEED_INC, self.MAX_SPEED)
-            else :
-                self.player_y = max(self.player_y + offset_y, 0)
-                self.player_speed_y = max(self.player_speed_y - self.SPEED_INC, -self.MAX_SPEED)
+            reward -= 0.1
         
         if self.verbose:
             print(f"New player position: {self.player_x, self.player_y}, in env reward: {reward}")

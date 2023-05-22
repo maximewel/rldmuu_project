@@ -20,7 +20,8 @@ class EndTile(AbstractTile):
 class FrailTile(AbstractTile):
     tileType= TileType.FRAIL
 
-    FALL_CHANCE = 0.50
+    FALL_CHANCE = 1.0
+    FALL_SPEED_THRESHOLD = 0.60
     FALL_REWARD = -100
 
     def __init__(self) -> None:
@@ -31,21 +32,18 @@ class FrailTile(AbstractTile):
         has_moved: bool = True
         reward = 0
 
+        #Frail tiles half the movement speed of the player while it is moving on them
+        halved_x_speed, halved_y_speed = speed[0] / 2.0, speed[1] / 2.0
+
         match action:
             case Actions.NOTHING | Actions.DRILL:
                 x, y, done = 0, 0, False
                 has_moved = False
-            case Actions.LEFT:
-                x, y = -1, 0
-            case Actions.RIGHT:
-                x, y = 1, 0
-            case Actions.UP:
-                x, y = 0, -1
-            case Actions.DOWN:
-                x, y = 0, 1
+            case _:
+                x, y = halved_x_speed, halved_y_speed
 
         #If player is speeding, there is a chance to die on the frail tail
-        if has_moved and np.abs(sum(speed)) > 0 and np.random.rand() < self.FALL_CHANCE:
+        if has_moved and np.abs(sum(speed)) >= self.FALL_SPEED_THRESHOLD and np.random.rand() < self.FALL_CHANCE:
             x, y, done, reward = 0, 0, True, self.FALL_REWARD
 
         return x, y, done, reward
@@ -53,31 +51,18 @@ class FrailTile(AbstractTile):
 class FastTile(AbstractTile):
     tileType= TileType.FAST
 
-    SPEED_BOOST_CHANCE = 0.5
-
     def __init__(self) -> None:
         super().__init__()
+    
+    def bound_value(self, value: float, high: any, low: float) -> float:
+        return min(high, max(low, value))
 
     def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
-        abs_speed = np.abs(sum(speed))
-        x,y = 0,0
-        has_moved: bool = True
-        match action:
-            case Actions.LEFT:
-                x, y = -1, 0
-            case Actions.RIGHT:
-                x, y = 1, 0
-            case Actions.UP:
-                x, y = 0, -1
-            case Actions.DOWN:
-                x, y = 0, 1
-            case _:
-                has_moved = False
+        speed_x, speed_y = speed
 
-        if has_moved and abs_speed > 0 and np.random.rand() < self.SPEED_BOOST_CHANCE:
-            x, y = 2*x, 2*y
+        double_speed_x, double_speed_y = self.bound_value(2*speed_x, 1, -1), self.bound_value(2*speed_y, 1, -1)
         
-        return x, y, False, 0
+        return double_speed_x, double_speed_y, False, 0
 
 class RandomTile(AbstractTile):
     tileType= TileType.RANDOM
@@ -87,10 +72,11 @@ class RandomTile(AbstractTile):
         super().__init__()
 
     def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
+        speed_amplitude = sum(speed)
         match action:
             case Actions.LEFT | Actions.RIGHT | Actions.UP | Actions.DOWN:
-                rand_id = np.random.choice(len(self.moves))
-                x, y = self.moves[rand_id]
+                moves = [(speed_amplitude, 0), (-speed_amplitude, 0), (0, speed_amplitude), (0, -speed_amplitude)]
+                x, y = moves[np.random.choice(len(moves))]
             case _:
                 x, y = 0, 0
 
@@ -103,19 +89,7 @@ class StandardTile(AbstractTile):
         super().__init__()
 
     def execute(self, action: Actions, speed: Tuple[int, int]) -> Tuple[int, int, bool, float]:
-        x,y = 0, 0
-
-        match action:
-            case Actions.LEFT:
-                x, y = -1, 0
-            case Actions.RIGHT:
-                x, y = 1, 0
-            case Actions.UP:
-                x, y = 0, -1
-            case Actions.DOWN:
-                x, y = 0, 1
-
-        return x, y, False, 0
+        return speed[0], speed[1], False, 0
     
 class MineralTile(StandardTile):
     tileType= TileType.MINERAL
@@ -141,4 +115,4 @@ class MineralTile(StandardTile):
         return super().execute(action, speed)
 
     def has_mineral(self) -> bool:
-        return not self.value == 0
+        return self.value != 0
