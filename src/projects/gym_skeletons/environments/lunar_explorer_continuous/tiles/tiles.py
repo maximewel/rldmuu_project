@@ -21,7 +21,7 @@ class FrailTile(AbstractTile):
     tileType= TileType.FRAIL
 
     FALL_CHANCE = 1.0
-    FALL_SPEED_THRESHOLD = 0.60
+    FALL_SPEED_THRESHOLD = 0.75
     FALL_REWARD = -100
 
     def __init__(self) -> None:
@@ -43,7 +43,7 @@ class FrailTile(AbstractTile):
                 x, y = halved_x_speed, halved_y_speed
 
         #If player is speeding, there is a chance to die on the frail tail
-        if has_moved and np.abs(sum(speed)) >= self.FALL_SPEED_THRESHOLD and np.random.rand() < self.FALL_CHANCE:
+        if has_moved and np.abs(sum(speed)) > self.FALL_SPEED_THRESHOLD and np.random.rand() < self.FALL_CHANCE:
             x, y, done, reward = 0, 0, True, self.FALL_REWARD
 
         return x, y, done, reward

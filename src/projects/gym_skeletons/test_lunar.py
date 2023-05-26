@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "./environments/lunar_explorer/"))
 
 from environments.lunar_explorer.world_generator.array_generator import ArrayGenerator
-from environments.lunar_explorer.view.render import Lunar2DRenderer
+from environments.lunar_explorer.view.render import Lunar2DRenderer, LunarTextRenderer
 from environments.lunar_explorer.tiles.tiletype import TileType
 from environments.lunar_explorer.actions import Actions
 
@@ -19,7 +19,7 @@ import time
 def test_render():
     n_episodes = 3000
 
-    env = gymnasium.make("Lunar-explorer", render=True, size=10, max_episode_steps=500, seed=43)
+    env = gymnasium.make("Lunar-explorer", render=True, size=10, max_episode_steps=500, seed=43, renderer=LunarTextRenderer())
 
     env.reset()
 
@@ -37,7 +37,7 @@ def test_moves():
         [TileType.STANDARD, TileType.STANDARD]
     ])
 
-    env = gymnasium.make("Lunar-explorer", render=True, size=2, max_episode_steps=500, world_generator=world_generator)
+    env = gymnasium.make("Lunar-explorer", render=True, size=2, max_episode_steps=500, world_generator=world_generator, renderer=LunarTextRenderer())
 
     env.reset()
 
@@ -54,7 +54,7 @@ def test_random():
         [TileType.STANDARD, TileType.STANDARD, TileType.STANDARD]
     ])
 
-    env = gymnasium.make("Lunar-explorer", render=True, size=2, max_episode_steps=500, world_generator=world_generator)
+    env = gymnasium.make("Lunar-explorer", render=True, size=2, max_episode_steps=500, world_generator=world_generator, renderer=LunarTextRenderer())
 
     for i in range(3):
         print(f"Test {i}")
@@ -96,6 +96,30 @@ def test_mineral():
         print(f"First drill: reward = {reward}")
         obs, reward, terminated, truncated, info = env.step(Actions.DRILL.value)
         print(f"Second drill: reward = {reward}")
+
+def test_mineral_limit():
+    """Test a simple loop through the grid"""
+    world_generator = ArrayGenerator([
+        [TileType.STANDARD, TileType.MINERAL, TileType.MINERAL],
+        [TileType.MINERAL, TileType.MINERAL, TileType.MINERAL],
+        [TileType.MINERAL, TileType.MINERAL, TileType.MINERAL]
+    ])
+
+    env = gymnasium.make("Lunar-explorer", render=True, size=2, max_episode_steps=500, world_generator=world_generator, renderer=Lunar2DRenderer())
+    env.reset()
+
+    right = True
+    for _ in range(3):
+        for _ in range(3):
+            move_action = Actions.RIGHT if right else Actions.LEFT
+
+            obs, reward, terminated, truncated, info = env.step(Actions.DRILL.value)
+            obs, _, terminated, truncated, info = env.step(move_action.value)
+
+            print(f"Drill: reward = {reward}")
+            sleep(2)
+        right = not right
+        obs, reward, terminated, truncated, info = env.step(Actions.DOWN.value)
 
 def test_fast():
     world_generator = ArrayGenerator([
@@ -169,4 +193,6 @@ if __name__ == '__main__':
 
     # test_2d()
 
-    test_square()
+    # test_square()
+
+    test_mineral_limit()

@@ -19,6 +19,7 @@ import numpy as np
 class LunarExplorer(BaseEnv):
 
     grid: ndarray[AbstractTile]
+    padded_type_grid: ndarray[int]
 
     renderer: LunarRenderer
 
@@ -34,7 +35,7 @@ class LunarExplorer(BaseEnv):
     SPEED_INC = 1
     MAX_SPEED = 1
 
-    MAX_DRILL = 5
+    MAX_DRILL = 3
     EMPTY_DRILL_PENALTY = 20
 
     world_generator: AbstractGenerator
@@ -42,19 +43,34 @@ class LunarExplorer(BaseEnv):
 
     verboe: bool
 
-    def __init__(self, render, size: int, seed: int = None, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None, verbose: bool = False):
+    fov_size: int
+
+    def __init__(self, render, size: int, seed: int = None, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None, verbose: bool = False, fov_size: int = None):
         self.verbose = verbose
         self.seed = seed
         np.random.seed(seed)
 
         super().__init__(render)
+        
+        max_fov_size = size - 1
+        if fov_size is None:
+            fov_size = size - 1
+        elif fov_size > max_fov_size:
+            raise Exception(f"Can not generate FOV or {fov_size} with board of size {size}")
+        self.fov_size = fov_size
 
         self.world_generator = world_generator or RandomGenerator(size) 
 
         self.renderer = renderer or Lunar2DRenderer()
 
         # The observation contains (x, y, Vx, Vy, has_mineral, has_drill)
-        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0, 0]), high=np.array([size-1, size-1, 1, 1, 1, 1]), shape=(6,), dtype=np.int32)
+        fov_values_count = (1 + 2 * self.fov_size) ** 2
+        fow_low = [-1 for _ in range(fov_values_count)]
+        fov_high = [1 for _ in range(fov_values_count)]
+
+        print(f"Size: {size}, fov size: {self.fov_size}, fov values: {fov_values_count}")
+        
+        self.observation_space = spaces.Box(low=np.array([0, 0, -1, -1, 0, 0] + fow_low), high=np.array([size-1, size-1, 1, 1, 1, 1] + fov_high), shape=(6+fov_values_count,), dtype=np.int32)
         # We have multiple actions, corresponding to the ones found in the enum
         self.action_space = spaces.Discrete(len(Actions))
 
@@ -71,6 +87,20 @@ class LunarExplorer(BaseEnv):
         self.drill_count = self.MAX_DRILL
 
         self.grid = self.world_generator.generate(self.seed)
+        self.padded_type_grid = self.grid_normalized_types(self.grid)
+        self.padded_type_grid = np.pad(self.padded_type_grid, pad_width=self.fov_size, mode="constant", constant_values=(0,))
+
+    def grid_normalized_types(self, grid: ndarray[AbstractTile]) -> ndarray[float]:
+        """
+        Return a grid of the game board tile type identifiers, normalized between 0 and 1.
+        Formally, the normalization equation is (1 + val) / (1 + max_val), with val>=0.
+        This makes 0 not atteignable, as 0 is used afterward as an indicator of "no tile".
+        """
+        type_grid = np.vectorize(lambda tile: 1 + tile.tileType.value)(grid)
+        type_grid = type_grid.astype(np.float32)
+        type_grid /= 1 + np.max([t.value for t in TileType])
+        
+        return type_grid
 
     def reset(self) -> ndarray:
         #Reset internal variables
@@ -86,7 +116,23 @@ class LunarExplorer(BaseEnv):
         tile: AbstractTile = self.grid[self.player_x, self.player_y]
         mineral_observation = 1 if tile.has_mineral() else 0
         drill_observation = 1 if self.drill_count >= 0 else 0
-        return np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation, drill_observation], dtype=np.int32)
+
+        observation = np.array([self.player_x, self.player_y, self.player_speed_x, self.player_speed_y, mineral_observation, drill_observation], dtype=np.int32)
+
+        fov = self.get_fov()
+
+        return np.concatenate((observation, fov), dtype=np.float32)
+
+    def get_fov(self) -> ndarray:
+        x_index_start = self.fov_size + self.player_x - self.fov_size
+        x_index_end = 1 + self.fov_size +self.player_x + self.fov_size
+        
+        y_index_start = self.fov_size + self.player_y - self.fov_size
+        y_index_end = 1 + self.fov_size + self.player_y + self.fov_size
+
+        fov_grid = self.padded_type_grid[x_index_start:x_index_end, y_index_start:y_index_end]
+
+        return fov_grid.flatten()
 
     def compute_reward(self, action) -> float:
         pass

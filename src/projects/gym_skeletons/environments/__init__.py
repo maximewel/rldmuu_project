@@ -26,3 +26,9 @@ register(
      entry_point="environments.lunar_explorer_continuous.lunar_explorer:LunarExplorerEnvGym",
      max_episode_steps=1000, 
 )
+
+register(
+     id="Lunar-explorer-fov", 
+     entry_point="environments.lunar_explorer_fov.lunar_explorer:LunarExplorerEnvGym",
+     max_episode_steps=1000, 
+)

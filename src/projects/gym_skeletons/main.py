@@ -22,15 +22,15 @@ import environments
 
 def test_one():
     #Taken for both "learning" phase and "showing off" phase
-    env = Environments.LUNAR_EXPLORER_CONTINUOUS
+    env = Environments.CARTPOLE
     seed = randint(0, 10000)
 
     #Hyper-parameters
-    training_episodes = 1000
+    training_episodes = 2000
     epsilon = 1.0
-    epislon_decay = 0.9999
+    epislon_decay = 0.99995
     alpha = 0.6
-    gamma = 0.9
+    gamma = 0.95
     dynaQ_update_per_iteration = 64
 
     #Init algos so that we can quickly switch
@@ -39,7 +39,7 @@ def test_one():
     #qLearningEliTra = QLearningEliTra(env=env, discount=alpha, learning_rate=gamma, eps=1., eps_decay=0.999)
     sarsa = Sarsa(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay)
     greedyQIteration = GreedyQIteration(epsilon=epsilon, alpha=alpha, gamma=gamma, epsilon_decay=epislon_decay, update_per_iteration=dynaQ_update_per_iteration)
-    dqn = DqnAlgorithm(terrain_size=10, k = 20000, epsilon=epsilon, gamma=gamma, lr=1e-3, hidden_layer_neurons=48, batch_size=128, tau=0.001, target_update_episodes=20)
+    dqn = DqnAlgorithm(terrain_size=10, k = 2500, epsilon=epsilon, gamma=gamma, lr=1e-3, hidden_layer_neurons=500, batch_size=32, tau=0.01, target_update_episodes=20)
 
     # selected algo
     algo = dqn

@@ -19,17 +19,24 @@ import numpy as np
 
 class DqnNetwork(nn.Module):
 
-    def __init__(self, n_observations: int, n_actions: int, hidden_layer_neurons: int):
+    def __init__(self, n_observations: int, n_actions: int, hidden_layer_neurons: int, hidden_layers_count: int):
         super().__init__()
         
         #Init model
+
+        #Init layer
         self.model = nn.Sequential(
             nn.Linear(n_observations, hidden_layer_neurons),
-            nn.ReLU(),
-            nn.Linear(hidden_layer_neurons, hidden_layer_neurons),
-            nn.ReLU(),
-            nn.Linear(hidden_layer_neurons, n_actions)
+            nn.ReLU()
         )
+
+        #Number of hidden layers
+        for _ in range(hidden_layers_count):
+            self.model.append(nn.Linear(hidden_layer_neurons, hidden_layer_neurons))
+            self.model.append(nn.ReLU())
+
+        #Output layer
+        self.model.append(nn.Linear(hidden_layer_neurons, n_actions))
 
     def forward(self, x):
         return self.model(x)
@@ -69,6 +76,7 @@ class DqnAlgorithm(Rlalgorithm):
     gamma: float
 
     batch_size: int
+    hidden_layer_count: int
     hidden_layer_neurons: int
     TAU: float
     lr: float
@@ -86,7 +94,7 @@ class DqnAlgorithm(Rlalgorithm):
 
     terrain_size: int
 
-    def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, batch_size: int = 128, 
+    def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, hidden_layers_count: int = 1, batch_size: int = 128, 
                  tau: float = 0.005, target_update_episodes: int = 20, terrain_size: int = 15) -> None:
         super().__init__()
         self.t = 0
@@ -98,6 +106,7 @@ class DqnAlgorithm(Rlalgorithm):
         self.lr = lr
         self.batch_size = batch_size
         self.hidden_layer_neurons = hidden_layer_neurons
+        self.hidden_layer_count = hidden_layer_count
         self.TAU = tau
         self.target_update_episodes = target_update_episodes
 
@@ -115,8 +124,9 @@ class DqnAlgorithm(Rlalgorithm):
         n_actions = actions_spaces.n
 
         #Create the two NN models with this information. They start the same but are not updated at the same time
-        self.policy_net = DqnNetwork(n_observations, n_actions, self.hidden_layer_neurons)
-        self.target_net = DqnNetwork(n_observations, n_actions, self.hidden_layer_neurons)
+        self.policy_net = DqnNetwork(n_observations, n_actions, self.hidden_layer_neurons, self.hidden_layer_count)
+        self.target_net = DqnNetwork(n_observations, n_actions, self.hidden_layer_neurons, self.hidden_layer_count)
+
         #Synchronize both states to have replicas
         self.target_net.load_state_dict(self.policy_net.state_dict())
 

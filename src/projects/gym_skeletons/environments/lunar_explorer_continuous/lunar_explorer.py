@@ -30,7 +30,7 @@ class LunarExplorer(BaseEnv):
 
     drill_count: int
 
-    SPEED_INC = 0.1
+    SPEED_INC = 0.25
     MAX_SPEED = 1
 
     MAX_DRILL = 3
@@ -38,7 +38,7 @@ class LunarExplorer(BaseEnv):
     world_generator: AbstractGenerator
     seed: int
 
-    verboe: bool
+    verbose: bool
 
     def __init__(self, render, size: int, seed: int = None, world_generator: AbstractGenerator = None, renderer: LunarRenderer = None, verbose: bool = False):
         self.verbose = verbose
@@ -136,11 +136,13 @@ class LunarExplorer(BaseEnv):
                     self.player_speed_y, self.player_speed_x = self.player_speed_x, 0
                 self.player_speed_y = min(self.player_speed_y + self.SPEED_INC, self.MAX_SPEED)
             case Actions.DRILL:
-                if self.drill_count > 0:
+                if self.drill_count >= 0:
                     self.drill_count -= 1
                     #Stop moving when drilling
                     self.player_speed_x = 0
                     self.player_speed_y = 0
+                else:
+                    action = Actions.NOTHING
 
         if self.verbose:
             print(f"Speed: ({self.player_speed_x},{self.player_speed_y})\n")

@@ -11,12 +11,15 @@ def start(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR
           init: bool = True, seed: int | None = None):
     """Start env with algorithm"""
 
-    env = gym.make(environment.value, render=render, size=10, seed=seed)
+    try:
+        env = gym.make(environment.value, render=render, size=10, seed=seed)
+    except TypeError as e:
+        env = gym.make(environment.value, render_mode="human" if render else None)
 
     if init:
         try:
             algorithm.set_env(env.observation_space, env.action_space, Bounds[environment.name])
-        except Exception:
+        except Exception as e:
             algorithm.set_env(env.observation_space, env.action_space, None)
 
     observation, info = env.reset()
