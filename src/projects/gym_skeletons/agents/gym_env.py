@@ -43,7 +43,10 @@ def start(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR
                 print(action)
                 print(observation)
                 sleep(0.2)
-
+            
+            if terminated:
+                observation = None
+                
             epsilon, reward = algorithm.update(action, observation, reward)
             epsilons.append(epsilon)
             rewards.append(reward)

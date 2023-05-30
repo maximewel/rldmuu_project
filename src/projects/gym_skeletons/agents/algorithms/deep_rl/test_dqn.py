@@ -106,7 +106,7 @@ class DqnAlgorithm(Rlalgorithm):
         self.lr = lr
         self.batch_size = batch_size
         self.hidden_layer_neurons = hidden_layer_neurons
-        self.hidden_layer_count = hidden_layer_count
+        self.hidden_layer_count = hidden_layers_count
         self.TAU = tau
         self.target_update_episodes = target_update_episodes
 
@@ -136,6 +136,9 @@ class DqnAlgorithm(Rlalgorithm):
         self.memory = ReplayMemory(10000)
     
     def normalize_observation(self, observation: np.ndarray):
+        if observation is None:
+            return None
+        
         x,y = observation[0], observation[1]
 
         x /= self.terrain_size
@@ -159,9 +162,9 @@ class DqnAlgorithm(Rlalgorithm):
 
     def update(self, action, observation, reward):
         """Update the state of the RL algo with the observed parameters"""
-        observation = self.normalize_observation(observation)
+        
+        next_state = None if observation is None else torch.tensor(self.normalize_observation(observation), dtype=torch.float32).unsqueeze(0)
 
-        next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
         reward_as_tensor = torch.tensor([reward])
         action_as_tensor = torch.tensor([[action]])
 
@@ -242,10 +245,5 @@ class DqnAlgorithm(Rlalgorithm):
     def set_state(self, observation: any):
         observation = self.normalize_observation(observation)
 
-        #Invalidate prev step
-        if (last_item := self.memory.last_value()):
-            last_item: Transition
-            self.memory.push(last_item.state, last_item.action, None, last_item.reward)
-
-        #Don't call discretization method as we want the continuous input in the NNz
+        #Don't call discretization method as we want the continuous input in the NN
         self.state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
