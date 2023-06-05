@@ -7,12 +7,12 @@ from time import sleep
 
 EP_SHOW = 100
 
-def start(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR_LANDER, max_episodes: int | None = None, max_iteration: int | None = 1000, render: bool = True, 
-          init: bool = True, seed: int | None = None):
+def start(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR_LANDER, max_episodes: int | None = None, max_iteration: int | None = 300, render: bool = True, 
+          init: bool = True, **kwargs):
     """Start env with algorithm"""
 
     try:
-        env = gym.make(environment.value, render=render, size=10, seed=seed)
+        env = gym.make(environment.value, render=render, size=10, **kwargs)
     except TypeError as e:
         env = gym.make(environment.value, render_mode="human" if render else None)
 
@@ -53,7 +53,7 @@ def start(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR
 
             if terminated or truncated or iteration > max_iteration: #Avoid getting stuck
                 print(f"\rEpisode {episode}/{max_episodes}", end="")
-                observation, info = env.reset(seed=seed)
+                observation, info = env.reset(seed=kwargs['seed'])
                 algorithm.set_state(observation)
 
                 sum_reward = np.sum(rewards)

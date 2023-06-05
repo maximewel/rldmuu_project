@@ -8,7 +8,7 @@ from actions import Actions
 class EndTile(AbstractTile):
     tileType= TileType.END
 
-    END_VALUE = 100
+    END_VALUE = 10
 
     def __init__(self) -> None:
         super().__init__()
@@ -21,7 +21,7 @@ class FrailTile(AbstractTile):
     tileType= TileType.FRAIL
 
     FALL_CHANCE = 1.0
-    FALL_SPEED_THRESHOLD = 0.75
+    FALL_SPEED_THRESHOLD = 0.50
     FALL_REWARD = -100
 
     def __init__(self) -> None:

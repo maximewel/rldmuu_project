@@ -34,7 +34,7 @@ class LunarExplorer(BaseEnv):
     SPEED_INC = 1
     MAX_SPEED = 1
 
-    MAX_DRILL = 5
+    MAX_DRILL = 3
     EMPTY_DRILL_PENALTY = 20
 
     world_generator: AbstractGenerator

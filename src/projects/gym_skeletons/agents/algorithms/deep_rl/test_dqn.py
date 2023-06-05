@@ -95,7 +95,7 @@ class DqnAlgorithm(Rlalgorithm):
     terrain_size: int
 
     def __init__(self, k: int = 50000, epsilon: float = 1.0, gamma: float = 0.9, lr: float = 1e-4, hidden_layer_neurons: int = 32, hidden_layers_count: int = 1, batch_size: int = 128, 
-                 tau: float = 0.005, target_update_episodes: int = 20, terrain_size: int = 15) -> None:
+                 tau: float = 0.005, target_update_episodes: int = 20, terrain_size: int = 10) -> None:
         super().__init__()
         self.t = 0
         self.k = k

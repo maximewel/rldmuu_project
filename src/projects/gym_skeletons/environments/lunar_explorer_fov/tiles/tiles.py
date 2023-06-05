@@ -8,7 +8,7 @@ from actions import Actions
 class EndTile(AbstractTile):
     tileType= TileType.END
 
-    END_VALUE = 1
+    END_VALUE = 10
 
     def __init__(self) -> None:
         super().__init__()

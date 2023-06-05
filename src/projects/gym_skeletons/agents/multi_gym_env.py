@@ -36,9 +36,7 @@ class MultiEnv():
     def init_env(self, index: int):
         """Start a new env, place it at the given location [index]"""
         seed = np.random.randint(0, 1e6)
-        print(f"Init environment {index} with seed {seed}")
 
-        print(f"Making with {self.env_configuration}")
         env = gym.make(**self.env_configuration, seed=seed)
         obs, info = env.reset()
         self.environment_store[index] = (obs, env)
@@ -80,13 +78,12 @@ class MultiEnv():
         for obs, env in self.environment_store:
             env.close()
 
-def train(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR_LANDER, max_episodes: int | None = None, max_iteration: int | None = 1000):
+def train(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR_LANDER, max_episodes: int | None = None, max_iteration: int | None = 300,
+          fov_on_player: bool = True):
     """Start env with algorithm"""
 
-    print(f"Env: {environment}")
-
     if environment.value in [Environments.LUNAR_EXPLORER.value, Environments.LUNAR_EXPLORER_CONTINUOUS.value, Environments.LUNAR_EXPLORER_FOV.value]:
-        env_config = {"id": environment.value, "render": False, "size": 10}
+        env_config = {"id": environment.value, "render": False, "size": 10, "fov_on_player": fov_on_player}
     else:
         env_config = {"id":environment.value, "render_mode": None}
     
@@ -119,7 +116,7 @@ def train(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR
             epsilons.append(epsilon)
             episode_rewards[current_env_index].append(reward)
 
-            if terminated or truncated or iteration[current_env_index] > max_iteration: #Avoid getting stuck
+            if terminated or truncated: #Avoid getting stuck
                 print(f"\rEpisode {episode}/{max_episodes}", end="")
 
                 end_rewards.append(reward)
@@ -129,9 +126,9 @@ def train(algorithm: Rlalgorithm, environment: Environments = Environments.LUNAR
 
                 if episode % EP_SHOW == 0:
                     print()
-                    print(f"Average rewards over last {EP_SHOW} episodes \n\t\
-                          Mean: {np.mean(total_rewards[-EP_SHOW:])}\
-                          End: {np.mean(end_rewards[-EP_SHOW:])}\n\t")
+                    print(f"Average rewards over last {EP_SHOW} episodes\n\
+                          \tMean: {np.mean(total_rewards[-EP_SHOW:])}\n\
+                          \tEnd: {np.mean(end_rewards[-EP_SHOW:])}")
 
                 episode += 1
                 iteration[current_env_index] = 0

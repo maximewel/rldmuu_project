@@ -9,16 +9,18 @@ class QLearningAritEps(Rlalgorithm):
     # Parameters inherent to Q-function
     alpha: float            # Learning rate
     gamma: float            # Future Reward discount
+    min_epsilon: float      # Min epsilon value
 
     t: int
     k: int
 
-    def __init__(self, epsilon: float, alpha: float, gamma: float, k: int = 10) -> None:
+    def __init__(self, epsilon: float, min_epsilon: float, alpha: float, gamma: float, k: int = 10) -> None:
         self.epsilon = epsilon
         self.gamma = gamma
         self.alpha = alpha
         self.t = 0
         self.k = k
+        self.min_epsilon = min_epsilon
 
     def next_action(self):
         """Apply policy to determine next action from Q-table"""
@@ -42,6 +44,6 @@ class QLearningAritEps(Rlalgorithm):
         self.state = next_state
 
         self.t += 1
-        self.epsilon = self.k / (self.k + self.t)
+        self.epsilon = max(self.k / (self.k + self.t), self.min_epsilon)
 
         return (self.epsilon, reward)

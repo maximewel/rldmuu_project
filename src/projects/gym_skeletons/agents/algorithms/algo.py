@@ -50,7 +50,7 @@ class Rlalgorithm(ABC):
         #Discretisation of the observation is made in the context of bounded metrics.
         #The value of each metric is localized in its amplitude (max - min). Then it is placed in the floor
         #nearest discrete 'bucket'. This allow us to quickly retrieve the discrete value without having to perform distances.
-        if isinstance(self.state_space, Discrete):
+        if isinstance(self.state_space, Discrete) or observation is None:
             return observation
 
         discrete_array = []

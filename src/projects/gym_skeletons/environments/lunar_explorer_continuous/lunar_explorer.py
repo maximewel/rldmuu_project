@@ -29,11 +29,13 @@ class LunarExplorer(BaseEnv):
     player_speed_y: float
 
     drill_count: int
+    has_drilled: bool
 
     SPEED_INC = 0.25
     MAX_SPEED = 1
 
     MAX_DRILL = 3
+    EMPTY_DRILL_PENALTY = 20
 
     world_generator: AbstractGenerator
     seed: int
@@ -116,6 +118,8 @@ class LunarExplorer(BaseEnv):
 
         if self.verbose:
             print(f"Speed = ({self.player_speed_x},{self.player_speed_y}), going {action}")
+        
+        has_drilled = False
 
         #Add acceleration to player speed
         match action:
@@ -141,6 +145,7 @@ class LunarExplorer(BaseEnv):
                     #Stop moving when drilling
                     self.player_speed_x = 0
                     self.player_speed_y = 0
+                    has_drilled = True
                 else:
                     action = Actions.NOTHING
 
@@ -156,6 +161,10 @@ class LunarExplorer(BaseEnv):
             print(f"Stepping on tile {tile.tileType.name}")
             print(f"New player offset: {offset_x, offset_y}")
         
+        #Punish 'empty drills'
+        if has_drilled and reward <= 0:
+            reward -= self.EMPTY_DRILL_PENALTY
+
         #Compute new position, verify that the rover is not going out of bound with its position.
         if offset_x != 0:
             new_x = self.player_x + offset_x
